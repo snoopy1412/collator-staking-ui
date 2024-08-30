@@ -36,6 +36,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     }
   });
 
+  console.log('balance', balance);
+
   const balanceNumber = balance ? Number(balance) : 0;
 
   const {
@@ -65,6 +67,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     [tokenIdsResult]
   );
 
+  console.log('validTokenIds', validTokenIds);
+
   const {
     data: depositInfos,
     isLoading: isDepositInfosLoading,
@@ -80,6 +84,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       enabled: enabled && validTokenIds.length > 0
     }
   });
+
+  console.log('depositInfos', depositInfos);
 
   const {
     data: ktonAmounts,
@@ -98,6 +104,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     }
   });
 
+  console.log('ktonAmounts', ktonAmounts);
+
   const {
     data: claimPenaltyInfos,
     isLoading: isClaimPenaltyInfosLoading,
@@ -113,6 +121,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       enabled: enabled && validTokenIds.length > 0
     }
   });
+
+  console.log('claimPenaltyInfos', claimPenaltyInfos);
 
   const deleteDepositInfoByTokenId = useCallback((tokenId: bigint) => {
     setDepositList((prevDepositList) =>
@@ -151,6 +161,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       setDepositList([]);
     }
   }, [validTokenIds, depositInfos, ktonAmounts, claimPenaltyInfos, setDepositList]);
+
+  console.log('depositList', depositList);
 
   const isLoading = useMemo(() => {
     return (

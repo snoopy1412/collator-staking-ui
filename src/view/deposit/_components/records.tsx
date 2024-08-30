@@ -225,7 +225,6 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
               aria-label="Select collator table"
               color="primary"
               layout="fixed"
-              selectionMode="single"
               classNames={{
                 base: 'min-w-[100%] overflow-x-auto',
                 td: 'text-foreground'

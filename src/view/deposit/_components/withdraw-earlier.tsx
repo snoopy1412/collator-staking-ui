@@ -146,7 +146,7 @@ const WithdrawEarlier = ({ tokenId, isOpen, onClose, symbol, onSuccess }: Withdr
 
           <Divider />
           <ModalBody className="flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
-            <p className="m-0 text-center text-[0.75rem] font-bold text-foreground">
+            <p className="m-0 text-left text-[0.75rem] font-bold text-foreground">
               Since the deposit term doesn’t end yet, you’ll be charged a penalty of 3 times the
               KTON reward if you try to withdraw the RINGs in advance.
             </p>
