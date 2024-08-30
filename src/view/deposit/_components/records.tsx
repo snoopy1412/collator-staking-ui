@@ -58,7 +58,6 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
         setWithdrawHash(tx);
       } catch (error) {
         console.warn('Error withdrawing:', error);
-
         toast.error('Something went wrong while withdrawing', {
           classNames: {
             toast:
