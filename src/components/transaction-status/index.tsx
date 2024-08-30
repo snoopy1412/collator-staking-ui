@@ -1,35 +1,44 @@
 import React, { useMemo } from 'react';
 import { Modal, ModalBody, ModalContent } from '@nextui-org/modal';
+import { useWaitForTransactionReceipt } from 'wagmi';
 
 import TransactionPending from './pending';
 import TransactionSuccess from './success';
 import TransactionFail from './fail';
 
-export type TransactionStatusType = 'pending' | 'success' | 'fail' | null;
-
 interface TransactionStatusProps {
-  status: TransactionStatusType;
-  isOpen: boolean;
-  onClose: () => void;
-  onOk?: () => void;
+  hash: `0x${string}`;
+  title: string;
+  onSuccess?: () => void;
+  onFail?: () => void;
 }
 
-const TransactionStatus: React.FC<TransactionStatusProps> = ({ status, isOpen, onOk }) => {
-  const renderContent = useMemo(() => {
-    switch (status) {
-      case 'pending':
-        return <TransactionPending />;
-      case 'success':
-        return <TransactionSuccess onOk={onOk} />;
-      case 'fail':
-        return <TransactionFail onOk={onOk} />;
-      default:
-        return null;
+const TransactionStatus: React.FC<TransactionStatusProps> = ({
+  hash,
+  title,
+  onSuccess,
+  onFail
+}) => {
+  const { isLoading, isSuccess, isError } = useWaitForTransactionReceipt({
+    hash,
+    query: {
+      enabled: !!hash
     }
-  }, [status, onOk]);
+  });
+  const renderContent = useMemo(() => {
+    if (isLoading) {
+      return <TransactionPending />;
+    }
+    if (isSuccess) {
+      return <TransactionSuccess onOk={onSuccess} title={title} />;
+    }
+    if (isError) {
+      return <TransactionFail onOk={onFail} title={title} />;
+    }
+  }, [isLoading, isSuccess, isError, title, onSuccess, onFail]);
 
   return (
-    <Modal isOpen={isOpen} hideCloseButton placement="center" className="bg-background">
+    <Modal isOpen hideCloseButton placement="center" className="bg-background">
       <ModalContent className="h-[calc(100vw-1.24rem)] w-[calc(100vw-1.24rem)] p-0 md:h-[25rem] md:w-[25rem]">
         <ModalBody className="flex h-full w-full flex-col items-center justify-center p-5">
           {renderContent}

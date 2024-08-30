@@ -2,7 +2,6 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import useTheme from '@/hooks/useTheme';
 import { Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import DefiTabs from './tabs';
 import ReservedStakingPanel from '@/components/reserved-staking-panel';
 import BaseCard from '@/components/card';
@@ -26,8 +25,6 @@ const Root = () => {
         </main>
         <Footer />
       </div>
-
-      <TanStackRouterDevtools />
     </div>
   );
 };

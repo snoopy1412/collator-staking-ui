@@ -12,12 +12,8 @@ type DepositProps = {
 const useDeposit = () => {
   const result = useWriteContract();
 
-  console.log('result', result);
-
   const handleDeposit = useCallback(
     ({ months, value }: DepositProps) => {
-      console.log('handleDeposit', months, value);
-
       if (!months || !value) return;
       return result.writeContractAsync({
         address,

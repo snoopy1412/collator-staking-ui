@@ -9,3 +9,21 @@ export const KTON_TOKEN_MAP = new Map<ChainId, string>([
   [ChainId.DARWINIA, 'KTON'],
   [ChainId.KOI, 'PKTON']
 ]);
+
+export const KTON_TOKEN_INFO_MAP = new Map<
+  ChainId,
+  { symbol: string; decimals: number; address: `0x${string}` }
+>([
+  [
+    ChainId.CRAB,
+    { symbol: 'CKTON', decimals: 18, address: '0x0000000000000000000000000000000000000402' }
+  ],
+  [
+    ChainId.DARWINIA,
+    { symbol: 'KTON', decimals: 18, address: '0x0000000000000000000000000000000000000402' }
+  ],
+  [
+    ChainId.KOI,
+    { symbol: 'PKTON', decimals: 18, address: '0x0000000000000000000000000000000000000402' }
+  ]
+]);

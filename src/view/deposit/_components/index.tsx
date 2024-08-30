@@ -3,8 +3,8 @@ import { Button, Select, SelectItem } from '@nextui-org/react';
 
 import useWalletStatus from '@/hooks/useWalletStatus';
 import useBalance from '@/hooks/useBalance';
-import useGetKtonTokenName from '@/hooks/useGetKtonTokenName';
 import AmountInput from '@/components/amount-input-with-balance';
+import TransactionStatus from '@/components/transaction-status';
 import Rewards from './rewards';
 import Records from './records';
 import useComputeInterest from '../_hooks/compute-interest';
@@ -15,12 +15,12 @@ import type { SharedSelection } from '@nextui-org/react';
 const terms = new Array(36).fill(0).map((_, index) => index + 1);
 
 const Deposit = () => {
+  const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
   const [amount, setAmount] = useState<string | undefined>('0');
   const [selectedMonthPeriod, setSelectedMonthPeriod] = useState<SharedSelection>(new Set());
-  const { isEnabled } = useWalletStatus();
-  const ktonTokenName = useGetKtonTokenName();
-  const { formatted, isLoading, data: balance } = useBalance();
+  const { isEnabled, ktonInfo } = useWalletStatus();
+  const { formatted, isLoading, data: balance, refetch: refetchBalance } = useBalance();
   const { handleDeposit, isPending: isPendingDeposit } = useDeposit();
   const computeInterest = useComputeInterest(amount, selectedMonthPeriod?.currentKey);
 
@@ -32,9 +32,17 @@ const Deposit = () => {
     setSelectedMonthPeriod(keys as Set<string>);
   }, []);
 
-  const handleConfirmDeposit = useCallback(() => {
-    handleDeposit({ months: selectedMonthPeriod?.currentKey, value: amount });
+  const handleConfirmDeposit = useCallback(async () => {
+    const hash = await handleDeposit({ months: selectedMonthPeriod?.currentKey, value: amount });
+    setHash(hash);
   }, [handleDeposit, selectedMonthPeriod, amount]);
+
+  const handleCloseTransactionStatus = useCallback(() => {
+    setHash(undefined);
+    setAmount('0');
+    setSelectedMonthPeriod(new Set());
+    refetchBalance();
+  }, [refetchBalance]);
 
   const isDisabledDeposit = useMemo(() => {
     return (
@@ -80,7 +88,7 @@ const Deposit = () => {
           ))}
         </Select>
         <Rewards
-          symbol={ktonTokenName || ''}
+          symbol={ktonInfo?.symbol || ''}
           isLoading={computeInterest.isLoading}
           data={computeInterest.data || BigInt(0)}
         />
@@ -105,7 +113,14 @@ const Deposit = () => {
           </Button>
         </div>
       </div>
-      <Records isOpen={isOpen} onClose={() => setIsOpen(false)} symbol="ETH" ktonSymbol="KTON" />
+      <Records
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onRefreshRingBalance={refetchBalance}
+      />
+      {hash && (
+        <TransactionStatus hash={hash} title="Deposit" onSuccess={handleCloseTransactionStatus} />
+      )}
     </>
   );
 };

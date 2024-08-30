@@ -7,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="flex h-[var(--footer-height)] w-full items-center py-[var(--footer-padding-y)]">
       <div className="max-auto flex w-full items-center justify-center px-[var(--container-padding-x)] md:justify-between">
-        <span className="text-[0.875rem] font-normal capitalize text-secondary-500/50">
+        <span className="text-[0.875rem] font-normal capitalize text-foreground/50">
           &copy; {currentYear} Darwinia Network
         </span>
 

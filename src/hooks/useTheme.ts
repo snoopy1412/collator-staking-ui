@@ -9,7 +9,8 @@ import useDarkMode from 'use-dark-mode';
 const useTheme = () => {
   const darkMode = useDarkMode(false, {
     classNameDark: 'dark',
-    classNameLight: 'light'
+    classNameLight: 'light',
+    element: document.documentElement
   });
 
   const theme = darkMode.value ? 'dark' : 'light';

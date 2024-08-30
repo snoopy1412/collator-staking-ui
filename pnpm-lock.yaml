@@ -20,6 +20,9 @@ dependencies:
   '@tanstack/react-router':
     specifier: ^1.51.2
     version: 1.51.2(react-dom@18.3.1)(react@18.3.1)
+  '@wagmi/core':
+    specifier: ^2.13.4
+    version: 2.13.4(@types/react@18.3.3)(react@18.3.1)(typescript@5.5.3)(viem@2.20.1)
   autoprefixer:
     specifier: ^10.4.20
     version: 10.4.20(postcss@8.4.41)
@@ -29,6 +32,9 @@ dependencies:
   blo:
     specifier: ^1.2.0
     version: 1.2.0
+  dayjs:
+    specifier: ^1.11.13
+    version: 1.11.13
   framer-motion:
     specifier: ^11.3.30
     version: 11.3.30(react-dom@18.3.1)(react@18.3.1)

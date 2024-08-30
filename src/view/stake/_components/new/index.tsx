@@ -13,7 +13,6 @@ import {
 import { ChevronDown, X } from 'lucide-react';
 
 import { TransitionPanel } from '@/components/transition-panel';
-import TransactionStatus from '@/components/transaction-status';
 import { stakeTabs } from '@/config/tabs';
 
 import StakeRing from './stake-ring';
@@ -136,12 +135,7 @@ const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
           </ModalBody>
         </ModalContent>
       </Modal>
-      <TransactionStatus
-        isOpen={isStaking}
-        status={isStaking ? 'pending' : 'success'}
-        onClose={() => setIsSuccess(false)}
-        onOk={() => setIsSuccess(false)}
-      />
+
       <SelectCollator isOpen={selectCollatorOpen} onClose={handleClose} />
     </>
   );

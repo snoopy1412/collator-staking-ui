@@ -7,10 +7,8 @@ import { getStakeData } from '@/faker-data';
 import StakeList from './list';
 import NewStake from './new';
 import MangeStake from './mange';
-import { Route } from '@/routes/stake.lazy';
 
 const StakePage = () => {
-  Route.useLoaderData();
   const { data, isLoading } = useQuery({
     queryKey: ['stakes'],
     queryFn: () => getStakeData()

@@ -28,9 +28,9 @@ export const nextUIConfig: NextUIPluginConfig = {
   themes: {
     light: {
       colors: {
-        default: {
-          DEFAULT: '#F2F3F5'
-        },
+        // default: {
+        //   DEFAULT: '#F2F3F5'
+        // },
         secondary: {
           DEFAULT: '#F2F3F5'
         },
