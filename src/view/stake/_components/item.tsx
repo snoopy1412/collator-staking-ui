@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import TooltipFormattedNumber from '@/components/tooltip-formatter-number';
 import Avatar from '@/components/avatar';
+import CollatorStatus from '@/components/collator-status';
 
 interface ItemProps {
   address: `0x${string}`;
@@ -36,9 +37,15 @@ const Item = ({ address, amount, ensName, id, onClick, style }: ItemProps) => {
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-[0.62rem]">
+          <div className="flex items-center gap-[0.31rem]">
             <Avatar address={address} />
-            <span className="text-[0.875rem] font-bold text-foreground">{ensName}</span>
+            <span
+              className="line-clamp-1 max-w-40 text-[0.875rem] font-bold text-foreground"
+              title={ensName}
+            >
+              {ensName}
+            </span>
+            <CollatorStatus status="active" />
           </div>
           <TooltipFormattedNumber
             value={amount}

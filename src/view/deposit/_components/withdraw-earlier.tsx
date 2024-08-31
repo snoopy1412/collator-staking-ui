@@ -131,7 +131,6 @@ const WithdrawEarlier = ({ tokenId, isOpen, onClose, symbol, onSuccess }: Withdr
         placement="center"
         isOpen={isOpen}
         onOpenChange={onClose}
-        backdrop="blur"
         classNames={{
           closeButton:
             'p-0 top-[1.35rem] right-[1.35rem] hover:opacity-[var(--nextui-hover-opacity)] hover:bg-transparent'

@@ -28,11 +28,7 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
     setFilterValue(value);
   };
   const renderCell = useCallback((item: any, columnKey: string) => {
-    console.log('item', item);
-    console.log('columnKey', columnKey);
-
     const cellValue = item[columnKey];
-    console.log('cellValue', cellValue);
 
     switch (columnKey) {
       case 'collator':

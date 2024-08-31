@@ -10,7 +10,6 @@ export type DepositInfo = {
   value: bigint;
   startAt: number;
   endAt: number;
-  ktonAmount: bigint;
   isClaimRequirePenalty: boolean;
 };
 
@@ -32,7 +31,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     functionName: 'balanceOf',
     args: [account as `0x${string}`],
     query: {
-      enabled: enabled && !!account
+      enabled: enabled && !!account,
+      retry: true
     }
   });
 
@@ -52,7 +52,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       args: [account as `0x${string}`, BigInt(index)]
     })),
     query: {
-      enabled: enabled && !!account && balanceNumber > 0
+      enabled: enabled && !!account && balanceNumber > 0,
+      retry: true
     }
   });
 
@@ -81,30 +82,12 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       args: [tokenId]
     })),
     query: {
-      enabled: enabled && validTokenIds.length > 0
+      enabled: enabled && validTokenIds.length > 0,
+      retry: true
     }
   });
 
   console.log('depositInfos', depositInfos);
-
-  const {
-    data: ktonAmounts,
-    isLoading: isKtonAmountsLoading,
-    refetch: refetchKtonAmounts
-  } = useReadContracts({
-    contracts:
-      depositInfos?.map((info) => ({
-        address: depositAddress as `0x${string}`,
-        abi: depositAbi,
-        functionName: 'computeInterest',
-        args: [info.result?.[2] ? BigInt(info.result?.[2]) : BigInt(0), info.result?.[0]]
-      })) ?? [],
-    query: {
-      enabled: enabled && !!depositInfos && depositInfos.length > 0
-    }
-  });
-
-  console.log('ktonAmounts', ktonAmounts);
 
   const {
     data: claimPenaltyInfos,
@@ -118,7 +101,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       args: [tokenId]
     })),
     query: {
-      enabled: enabled && validTokenIds.length > 0
+      enabled: enabled && validTokenIds.length > 0,
+      retry: true
     }
   });
 
@@ -131,14 +115,13 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
   }, []);
 
   useEffect(() => {
-    if (validTokenIds && depositInfos && ktonAmounts && claimPenaltyInfos) {
+    if (validTokenIds && depositInfos && claimPenaltyInfos) {
       const newDepositList = validTokenIds.map((tokenId, index) => {
         const info = depositInfos[index]?.result || [];
         const months = info?.[0] ?? 0;
         const startAt = Number(info?.[1] ?? 0);
         const value = info?.[2] ?? 0;
 
-        const ktonAmount = (ktonAmounts[index]?.result as bigint) ?? BigInt(0);
         const endAt = dayjs
           .unix(startAt)
           .add(dayjs.duration({ months: Number(months) }))
@@ -152,7 +135,6 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
           value,
           startAt,
           endAt,
-          ktonAmount,
           isClaimRequirePenalty
         };
       });
@@ -160,39 +142,22 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     } else {
       setDepositList([]);
     }
-  }, [validTokenIds, depositInfos, ktonAmounts, claimPenaltyInfos, setDepositList]);
+  }, [validTokenIds, depositInfos, claimPenaltyInfos, setDepositList]);
 
   console.log('depositList', depositList);
 
   const isLoading = useMemo(() => {
     return (
-      isBalanceLoading ||
-      isTokenIdsLoading ||
-      isDepositInfosLoading ||
-      isKtonAmountsLoading ||
-      isClaimPenaltyInfosLoading
+      isBalanceLoading || isTokenIdsLoading || isDepositInfosLoading || isClaimPenaltyInfosLoading
     );
-  }, [
-    isBalanceLoading,
-    isTokenIdsLoading,
-    isDepositInfosLoading,
-    isKtonAmountsLoading,
-    isClaimPenaltyInfosLoading
-  ]);
+  }, [isBalanceLoading, isTokenIdsLoading, isDepositInfosLoading, isClaimPenaltyInfosLoading]);
 
   const refetch = useCallback(() => {
     refetchBalance();
     refetchTokenIds();
     refetchDepositInfos();
-    refetchKtonAmounts();
     refetchClaimPenaltyInfos();
-  }, [
-    refetchBalance,
-    refetchTokenIds,
-    refetchDepositInfos,
-    refetchKtonAmounts,
-    refetchClaimPenaltyInfos
-  ]);
+  }, [refetchBalance, refetchTokenIds, refetchDepositInfos, refetchClaimPenaltyInfos]);
 
   return {
     depositList,

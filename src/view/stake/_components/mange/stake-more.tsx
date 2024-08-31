@@ -2,14 +2,23 @@ import { Button, Divider, Modal, ModalBody, ModalContent, ModalHeader } from '@n
 import { X } from 'lucide-react';
 
 import AmountInputWithBalance from '@/components/amount-input-with-balance';
+import useBalance from '@/hooks/useBalance';
+import { useCallback, useState } from 'react';
 
-interface EditStakeProps {
+interface StakeMoreProps {
   isOpen: boolean;
   onClose: () => void;
-  symbol: string;
 }
 
-const StakeMore = ({ isOpen, onClose, symbol }: EditStakeProps) => {
+const StakeMore = ({ isOpen, onClose }: StakeMoreProps) => {
+  const [amount, setAmount] = useState<string | undefined>('0');
+
+  const { formatted, isLoading, data: balance, refetch: refetchBalance } = useBalance();
+
+  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value);
+  }, []);
+
   return (
     <Modal
       placement="center"
@@ -28,7 +37,14 @@ const StakeMore = ({ isOpen, onClose, symbol }: EditStakeProps) => {
 
         <Divider />
         <ModalBody className="flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
-          <AmountInputWithBalance className="w-full" symbol={symbol} balance={'0'} />
+          <AmountInputWithBalance
+            className="w-full"
+            symbol={balance?.symbol}
+            balance={formatted}
+            isLoading={isLoading}
+            value={amount}
+            onChange={handleAmountChange}
+          />
           <Divider />
           <Button color="primary" className="w-full">
             Stake

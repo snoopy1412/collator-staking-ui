@@ -39,7 +39,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
 
   return (
     <Modal isOpen hideCloseButton placement="center" className="bg-background">
-      <ModalContent className="h-[calc(100vw-1.24rem)] w-[calc(100vw-1.24rem)] p-0 md:h-[25rem] md:w-[25rem]">
+      <ModalContent className="h-[calc(100vw-1.24rem)] max-h-[28rem] w-[calc(100vw-1.24rem)] p-0 md:h-[25rem] md:w-[25rem]">
         <ModalBody className="flex h-full w-full flex-col items-center justify-center p-5">
           {renderContent}
         </ModalBody>

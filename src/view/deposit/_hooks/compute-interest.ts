@@ -15,17 +15,9 @@ const useComputeInterest = (amount?: string, selectedMonthPeriod?: string) => {
       selectedMonthPeriod ? BigInt(selectedMonthPeriod) : BigInt(0)
     ],
     query: {
-      enabled: !!isEnabled && !!address && !!amount && !!selectedMonthPeriod
+      enabled: !!isEnabled && !!address && amount !== '0' && !!selectedMonthPeriod
     }
   });
-
-  console.log(
-    'useComputeInterest',
-    amount ? parseEther(amount) : BigInt(0),
-    selectedMonthPeriod ? BigInt(selectedMonthPeriod) : BigInt(0),
-    result.isLoading,
-    result.data
-  );
 
   return result;
 };

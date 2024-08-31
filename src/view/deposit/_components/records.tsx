@@ -4,7 +4,6 @@ import {
   ModalBody,
   ModalContent,
   ModalHeader,
-  Progress,
   Spinner,
   Table,
   TableBody,
@@ -21,7 +20,6 @@ import { formatEther } from 'viem';
 
 import type { DepositInfo } from '@/hooks/useUserDepositDetails';
 import useWalletStatus from '@/hooks/useWalletStatus';
-import dayjs from 'dayjs';
 import { formatNumericValue } from '@/utils';
 import { checkIsClaimRequirePenalty } from '@/view/deposit/service';
 import WithdrawEarlier from './withdraw-earlier';
@@ -125,48 +123,22 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
   const renderCell = useCallback(
     (item: DepositInfo, columnKey: Key) => {
       const cellValue = item[columnKey as keyof DepositInfo];
-      const { startAt, endAt } = item;
 
       const formattedValue = formatNumericValue(formatEther(item?.value), 3);
-      const formattedKtonAmount = formatNumericValue(formatEther(item?.ktonAmount), 3);
 
       switch (columnKey) {
         case 'tokenId':
           return (
             <div className="text-[0.875rem] font-bold text-primary">ID #{cellValue.toString()}</div>
           );
-        case 'duration':
-          if (startAt && endAt) {
-            const startAtDate = dayjs(startAt * 1000).format('YYYY-MM-DD');
-            const endAtDate = dayjs(endAt * 1000).format('YYYY-MM-DD');
-            const now = dayjs().unix();
-            const totalDuration = endAt - startAt;
-            const elapsedDuration = Math.max(0, Math.min(now - startAt, totalDuration));
-            const progressValue = (elapsedDuration / totalDuration) * 100;
 
-            return (
-              <Progress
-                label={`${startAtDate} - ${endAtDate}`}
-                value={progressValue}
-                className="w-full"
-                size="sm"
-                color="primary"
-              />
-            );
-          }
-          return '-';
         case 'value':
           return (
             <span>
               {formattedValue.fixed} {currentChain?.nativeCurrency?.symbol}
             </span>
           );
-        case 'ktonAmount':
-          return (
-            <span>
-              {formattedKtonAmount.fixed} {ktonInfo?.symbol}
-            </span>
-          );
+
         case 'action': {
           if (item.isClaimRequirePenalty) {
             return (
@@ -197,7 +169,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
           return null;
       }
     },
-    [ktonInfo?.symbol, currentChain?.nativeCurrency?.symbol, handleWithdrawEarlier, handleWithdraw]
+    [currentChain?.nativeCurrency?.symbol, handleWithdrawEarlier, handleWithdraw]
   );
 
   return (
@@ -208,6 +180,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
         onClose={onClose}
         size="4xl"
         className="bg-background"
+        backdrop="blur"
         classNames={{
           closeButton:
             'p-0 top-[1.25rem] right-[1.25rem] hover:opacity-[var(--nextui-hover-opacity)] hover:bg-transparent  z-10'
@@ -216,7 +189,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
       >
         <ModalContent className="w-[calc(100vw-1.24rem)] px-5 py-0 md:max-w-[58.125rem]">
           <ModalHeader className="px-0 py-5 text-[1.125rem] font-bold text-foreground">
-            <span>Active Deposit Records</span>
+            <span>Wallet Deposit</span>
           </ModalHeader>
           <Divider />
           <ModalBody className="px-0 py-5">
@@ -234,14 +207,8 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
                 <TableColumn className="w-[9.375rem] bg-secondary" key="tokenId">
                   No.
                 </TableColumn>
-                <TableColumn className="w-[15.625rem] bg-secondary" key="duration">
-                  Duration
-                </TableColumn>
                 <TableColumn className="w-[10.625rem] bg-secondary" key="value">
                   Amount
-                </TableColumn>
-                <TableColumn className="w-[10.625rem] bg-secondary" key="ktonAmount">
-                  Reward
                 </TableColumn>
                 <TableColumn className="w-[9.375rem] bg-secondary" key="action" align="end">
                   Action
@@ -252,6 +219,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
                 loadingContent={<Spinner />}
                 emptyContent={<div className="text-center">No active deposit records</div>}
                 loadingState={isDepositListLoading ? 'loading' : 'idle'}
+                className="relative"
               >
                 {(item: DepositInfo) => (
                   <TableRow key={item?.tokenId}>

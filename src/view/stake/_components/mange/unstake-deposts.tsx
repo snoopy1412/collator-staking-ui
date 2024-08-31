@@ -1,15 +1,8 @@
-import {
-  Button,
-  Divider,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalHeader,
-  ScrollShadow
-} from '@nextui-org/react';
+import { Button, Divider, Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
 import { X } from 'lucide-react';
 
-import DepositItem from '@/components/deposit-item';
+import DepositList, { DepositListRef } from '@/components/deposit-list';
+import { useRef } from 'react';
 
 interface EditStakeProps {
   isOpen: boolean;
@@ -18,6 +11,11 @@ interface EditStakeProps {
 }
 
 const UnstakeDeposits = ({ isOpen, onClose }: EditStakeProps) => {
+  const depositListRef = useRef<DepositListRef>(null);
+  const handleUnstake = () => {
+    const checkedDepositId = depositListRef.current?.getCheckedDepositId();
+    console.log(checkedDepositId);
+  };
   return (
     <Modal
       placement="center"
@@ -36,23 +34,9 @@ const UnstakeDeposits = ({ isOpen, onClose }: EditStakeProps) => {
         </ModalHeader>
         <Divider />
         <ModalBody className="flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
-          <ScrollShadow
-            hideScrollBar
-            className="max-h-[15.06rem] w-full space-y-[1.25rem]"
-            size={20}
-          >
-            <DepositItem id="1" amount={1000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="2" amount={2000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="3" amount={3000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="4" amount={4000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="5" amount={5000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="5" amount={5000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="7" amount={7000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="8" amount={8000} symbol="USDT" onSelect={() => {}} />
-            <DepositItem id="9" amount={9000} symbol="USDT" onSelect={() => {}} />
-          </ScrollShadow>
+          <DepositList ref={depositListRef} />
 
-          <Button color="primary" className="w-full">
+          <Button color="primary" className="w-full" onClick={handleUnstake}>
             Unstake
           </Button>
         </ModalBody>

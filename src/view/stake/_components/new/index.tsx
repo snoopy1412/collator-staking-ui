@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Modal,
   ModalContent,
@@ -19,6 +19,8 @@ import StakeRing from './stake-ring';
 import StakeDeposit from './stake-deposit';
 import SelectCollator from './select-collator';
 
+import type { DepositListRef } from '@/components/deposit-list';
+
 import type { Key } from 'react';
 
 interface NewStakeModalProps {
@@ -26,6 +28,8 @@ interface NewStakeModalProps {
   isOpen?: boolean;
 }
 const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
+  const depositListRef = useRef<DepositListRef>(null);
+
   const [selected, setSelected] = useState<Key>(stakeTabs[0].key);
   const [isStaking, setIsStaking] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -115,8 +119,8 @@ const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
                 exit: { opacity: 0, filter: 'blur(4px)' }
               }}
             >
-              {selected === 'stake-ring' && <StakeRing symbol="RING" />}
-              {selected === 'stake-deposit' && <StakeDeposit />}
+              {selected === 'stake-ring' && <StakeRing />}
+              {selected === 'stake-deposit' && <StakeDeposit ref={depositListRef} />}
             </TransitionPanel>
 
             <Button
