@@ -4,7 +4,6 @@ import { useReadContract, useReadContracts } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sortBy } from 'lodash-es';
 import dayjs from '@/utils/date';
-import { multicall } from '@wagmi/core';
 
 export type DepositInfo = {
   tokenId: bigint;
