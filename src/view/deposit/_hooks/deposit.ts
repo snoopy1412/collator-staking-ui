@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
 
-import { abi, address } from '@/config/abi/depoist';
+import { abi, address } from '@/config/abi/deposit';
 
 type DepositProps = {
   months?: string;

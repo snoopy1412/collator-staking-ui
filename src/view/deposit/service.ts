@@ -1,4 +1,4 @@
-import { abi, address } from '@/config/abi/depoist';
+import { abi, address } from '@/config/abi/deposit';
 import { config } from '@/config/wagmi';
 import { Config, readContract } from '@wagmi/core';
 

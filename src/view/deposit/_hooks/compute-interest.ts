@@ -1,7 +1,7 @@
 import { useReadContract } from 'wagmi';
 import { parseEther } from 'viem';
 
-import { abi, address } from '@/config/abi/depoist';
+import { abi, address } from '@/config/abi/deposit';
 import useWalletStatus from '@/hooks/useWalletStatus';
 
 const useComputeInterest = (amount?: string, selectedMonthPeriod?: string) => {

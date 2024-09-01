@@ -1,4 +1,4 @@
-import { address as depositAddress, abi as depositAbi } from '@/config/abi/depoist';
+import { address as depositAddress, abi as depositAbi } from '@/config/abi/deposit';
 import useWalletStatus from '@/hooks/useWalletStatus';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';

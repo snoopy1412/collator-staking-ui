@@ -1,7 +1,7 @@
 import { erc20Abi } from 'viem';
 import { useReadContract, useWriteContract } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
-import { address as depositAddress } from '@/config/abi/depoist';
+import { address as depositAddress } from '@/config/abi/deposit';
 import { useCallback } from 'react';
 
 interface UseTokenAllowanceAndApproveProps {

@@ -59,7 +59,7 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
         <span className="text-primary">{fakerDays}</span> day
       </span>
     );
-  }, [fakerDays]);
+  }, []);
 
   return (
     <>

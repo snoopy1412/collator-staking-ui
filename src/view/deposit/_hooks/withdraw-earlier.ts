@@ -1,5 +1,5 @@
 import { useWriteContract } from 'wagmi';
-import { address, abi } from '@/config/abi/depoist';
+import { address, abi } from '@/config/abi/deposit';
 
 export const useWithdrawEarlier = () => {
   const { writeContractAsync, ...rest } = useWriteContract();

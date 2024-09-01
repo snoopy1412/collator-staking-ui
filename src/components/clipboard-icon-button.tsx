@@ -11,7 +11,6 @@ interface ClipboardIconButtonProps {
 const ClipboardIconButton = ({ text = '', size = 16 }: ClipboardIconButtonProps) => {
   const [state, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const enterTimeout = useRef<NodeJS.Timeout | undefined>();
   const leaveTimeout = useRef<NodeJS.Timeout | undefined>();
@@ -31,16 +30,12 @@ const ClipboardIconButton = ({ text = '', size = 16 }: ClipboardIconButtonProps)
 
   const handleMouseEnter = useCallback(() => {
     clearTimeout(leaveTimeout.current);
-    enterTimeout.current = setTimeout(() => {
-      setOpen(true);
-    }, 300);
+    enterTimeout.current = setTimeout(() => {}, 300);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     clearTimeout(enterTimeout.current);
-    leaveTimeout.current = setTimeout(() => {
-      setOpen(false);
-    }, 300);
+    leaveTimeout.current = setTimeout(() => {}, 300);
   }, []);
 
   useEffect(() => {

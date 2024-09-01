@@ -1,5 +1,5 @@
 import { useReadContract } from 'wagmi';
-import { abi, address } from '@/config/abi/depoist';
+import { abi, address } from '@/config/abi/deposit';
 
 export function useGetWithdrawPenalty(tokenId?: bigint) {
   const { data: computePenaltyData, isLoading: computePenaltyLoading } = useReadContract({
