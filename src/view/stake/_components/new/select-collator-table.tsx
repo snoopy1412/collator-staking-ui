@@ -7,7 +7,8 @@ import {
   TableRow,
   TableCell,
   Input,
-  Spinner
+  Spinner,
+  cn
 } from '@nextui-org/react';
 import { SearchIcon } from 'lucide-react';
 
@@ -67,7 +68,7 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
         defaultSelectedKeys={['2']}
         removeWrapper
         classNames={{
-          base: 'min-w-[100%] overflow-x-auto',
+          base: cn(isLoading ? '' : 'min-w-[100%] overflow-x-auto'),
           td: 'text-foreground'
         }}
         layout="fixed"
@@ -92,7 +93,11 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
         </TableHeader>
         <TableBody
           items={data || []}
-          loadingContent={<Spinner />}
+          loadingContent={
+            <div className="absolute inset-0 flex w-full items-center justify-center bg-background/50">
+              <Spinner />
+            </div>
+          }
           loadingState={isLoading ? 'loading' : 'idle'}
         >
           {(item: any) => (

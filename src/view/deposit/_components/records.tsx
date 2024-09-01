@@ -1,4 +1,5 @@
 import {
+  cn,
   Divider,
   Modal,
   ModalBody,
@@ -42,7 +43,8 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
   const {
     depositList,
     isLoading: isDepositListLoading,
-    deleteDepositInfoByTokenId
+    deleteDepositInfoByTokenId,
+    isRefetching
   } = useUserDepositDetails({
     enabled: isOpen
   });
@@ -192,13 +194,15 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
             <span>Wallet Deposit</span>
           </ModalHeader>
           <Divider />
-          <ModalBody className="px-0 py-5">
+          <ModalBody
+            className={cn('relative px-0 py-5', isDepositListLoading ? 'overflow-hidden' : '')}
+          >
             <Table
               aria-label="Select collator table"
               color="primary"
               layout="fixed"
               classNames={{
-                base: 'min-w-[100%] overflow-x-auto',
+                base: cn(isDepositListLoading ? '' : 'min-w-[100%] overflow-x-auto'),
                 td: 'text-foreground'
               }}
               removeWrapper
@@ -216,10 +220,14 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
               </TableHeader>
               <TableBody
                 items={depositList || []}
-                loadingContent={<Spinner />}
                 emptyContent={<div className="text-center">No active deposit records</div>}
-                loadingState={isDepositListLoading ? 'loading' : 'idle'}
                 className="relative"
+                loadingContent={
+                  <div className="absolute inset-0 flex w-full items-center justify-center bg-background/50">
+                    <Spinner />
+                  </div>
+                }
+                loadingState={isDepositListLoading || isRefetching ? 'loading' : 'idle'}
               >
                 {(item: DepositInfo) => (
                   <TableRow key={item?.tokenId}>

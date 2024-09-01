@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, ModalBody, ModalContent, Tab, Tabs } from '@nextui-org/react';
+import { useState } from 'react';
+import { cn, Modal, ModalBody, ModalContent, Tab, Tabs } from '@nextui-org/react';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -42,7 +42,7 @@ const SelectCollator = ({ isOpen, onClose }: SelectCollatorProps) => {
         closeButton={<X />}
       >
         <ModalContent className="w-[calc(100vw-1.24rem)] md:w-[35.625rem]">
-          <ModalBody className="p-5">
+          <ModalBody className={cn('p-5', isLoading ? 'overflow-hidden' : '')}>
             <Tabs
               aria-label="Options"
               color="primary"

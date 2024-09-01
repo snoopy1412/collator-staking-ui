@@ -2,7 +2,9 @@ import { address as depositAddress, abi as depositAbi } from '@/config/abi/depoi
 import useWalletStatus from '@/hooks/useWalletStatus';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { sortBy } from 'lodash-es';
 import dayjs from '@/utils/date';
+import { multicall } from '@wagmi/core';
 
 export type DepositInfo = {
   tokenId: bigint;
@@ -24,7 +26,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
   const {
     data: balance,
     isLoading: isBalanceLoading,
-    refetch: refetchBalance
+    refetch: refetchBalance,
+    isRefetching: isBalanceRefetching
   } = useReadContract({
     address: depositAddress,
     abi: depositAbi,
@@ -32,7 +35,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     args: [account as `0x${string}`],
     query: {
       enabled: enabled && !!account,
-      retry: true
+      refetchOnWindowFocus: false,
+      refetchOnMount: true
     }
   });
 
@@ -43,7 +47,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
   const {
     data: tokenIdsResult,
     isLoading: isTokenIdsLoading,
-    refetch: refetchTokenIds
+    refetch: refetchTokenIds,
+    isRefetching: isTokenIdsRefetching
   } = useReadContracts({
     contracts: Array.from({ length: balanceNumber }, (_, index) => ({
       address: depositAddress as `0x${string}`,
@@ -53,7 +58,10 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     })),
     query: {
       enabled: enabled && !!account && balanceNumber > 0,
-      retry: true
+      retry: true,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: true
     }
   });
 
@@ -71,42 +79,35 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
   console.log('validTokenIds', validTokenIds);
 
   const {
-    data: depositInfos,
-    isLoading: isDepositInfosLoading,
-    refetch: refetchDepositInfos
+    data: combinedInfos,
+    isLoading: isCombinedInfosLoading,
+    refetch: refetchCombinedInfos,
+    isRefetching: isCombinedInfosRefetching
   } = useReadContracts({
-    contracts: validTokenIds.map((tokenId) => ({
-      address: depositAddress as `0x${string}`,
-      abi: depositAbi,
-      functionName: 'depositOf',
-      args: [tokenId]
-    })),
+    contracts: validTokenIds
+      .map((tokenId) => [
+        {
+          address: depositAddress as `0x${string}`,
+          abi: depositAbi,
+          functionName: 'depositOf',
+          args: [tokenId]
+        },
+        {
+          address: depositAddress as `0x${string}`,
+          abi: depositAbi,
+          functionName: 'isClaimRequirePenalty',
+          args: [tokenId]
+        }
+      ])
+      .flat(),
     query: {
       enabled: enabled && validTokenIds.length > 0,
-      retry: true
+      retry: true,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: true
     }
   });
-
-  console.log('depositInfos', depositInfos);
-
-  const {
-    data: claimPenaltyInfos,
-    isLoading: isClaimPenaltyInfosLoading,
-    refetch: refetchClaimPenaltyInfos
-  } = useReadContracts({
-    contracts: validTokenIds.map((tokenId) => ({
-      address: depositAddress as `0x${string}`,
-      abi: depositAbi,
-      functionName: 'isClaimRequirePenalty',
-      args: [tokenId]
-    })),
-    query: {
-      enabled: enabled && validTokenIds.length > 0,
-      retry: true
-    }
-  });
-
-  console.log('claimPenaltyInfos', claimPenaltyInfos);
 
   const deleteDepositInfoByTokenId = useCallback((tokenId: bigint) => {
     setDepositList((prevDepositList) =>
@@ -115,19 +116,19 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
   }, []);
 
   useEffect(() => {
-    if (validTokenIds && depositInfos && claimPenaltyInfos) {
+    if (validTokenIds && combinedInfos) {
       const newDepositList = validTokenIds.map((tokenId, index) => {
-        const info = depositInfos[index]?.result || [];
-        const months = info?.[0] ?? 0;
-        const startAt = Number(info?.[1] ?? 0);
-        const value = info?.[2] ?? 0;
+        const depositInfo = combinedInfos[index * 2]?.result || [];
+        const isClaimRequirePenalty = !!combinedInfos[index * 2 + 1]?.result || true;
+
+        const months = depositInfo?.[0] ?? 0;
+        const startAt = Number(depositInfo?.[1] ?? 0);
+        const value = depositInfo?.[2] ?? 0;
 
         const endAt = dayjs
           .unix(startAt)
           .add(dayjs.duration({ months: Number(months) }))
           .unix();
-
-        const isClaimRequirePenalty = !!claimPenaltyInfos[index]?.result;
 
         return {
           tokenId,
@@ -138,31 +139,33 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
           isClaimRequirePenalty
         };
       });
-      setDepositList(newDepositList);
+      const sortedDepositList = sortBy(newDepositList, 'tokenId');
+
+      setDepositList(sortedDepositList);
     } else {
       setDepositList([]);
     }
-  }, [validTokenIds, depositInfos, claimPenaltyInfos, setDepositList]);
+  }, [validTokenIds, combinedInfos, setDepositList]);
 
   console.log('depositList', depositList);
 
   const isLoading = useMemo(() => {
-    return (
-      isBalanceLoading || isTokenIdsLoading || isDepositInfosLoading || isClaimPenaltyInfosLoading
-    );
-  }, [isBalanceLoading, isTokenIdsLoading, isDepositInfosLoading, isClaimPenaltyInfosLoading]);
-
+    return isBalanceLoading || isTokenIdsLoading || isCombinedInfosLoading;
+  }, [isBalanceLoading, isTokenIdsLoading, isCombinedInfosLoading]);
+  const isRefetching = useMemo(() => {
+    return isBalanceRefetching || isTokenIdsRefetching || isCombinedInfosRefetching;
+  }, [isBalanceRefetching, isTokenIdsRefetching, isCombinedInfosRefetching]);
   const refetch = useCallback(() => {
     refetchBalance();
     refetchTokenIds();
-    refetchDepositInfos();
-    refetchClaimPenaltyInfos();
-  }, [refetchBalance, refetchTokenIds, refetchDepositInfos, refetchClaimPenaltyInfos]);
+    refetchCombinedInfos();
+  }, [refetchBalance, refetchTokenIds, refetchCombinedInfos]);
 
   return {
     depositList,
     deleteDepositInfoByTokenId,
     isLoading,
+    isRefetching,
     refetch
   };
 }
