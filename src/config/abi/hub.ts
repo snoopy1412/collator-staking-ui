@@ -1,4 +1,4 @@
-export const address = '0x279a1aaDb6eC9d213350f95C3Da1A9580FB3326B';
+export const address = '0xb037E75fE2BFA42DdDC17BB90963Dafe10A5Dd11';
 export const abi = [
   {
     inputs: [],
@@ -99,19 +99,13 @@ export const abi = [
       {
         indexed: true,
         internalType: 'address',
-        name: 'stRING',
+        name: 'pool',
         type: 'address'
       },
       {
         indexed: false,
         internalType: 'address',
         name: 'collator',
-        type: 'address'
-      },
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'prev',
         type: 'address'
       }
     ],
@@ -298,19 +292,14 @@ export const abi = [
   {
     inputs: [
       {
+        internalType: 'address',
+        name: 'prev',
+        type: 'address'
+      },
+      {
         internalType: 'uint256',
         name: 'commission',
         type: 'uint256'
-      },
-      {
-        internalType: 'address',
-        name: 'oldPrev',
-        type: 'address'
-      },
-      {
-        internalType: 'address',
-        name: 'newPrev',
-        type: 'address'
       }
     ],
     name: 'collate',
@@ -401,6 +390,19 @@ export const abi = [
         type: 'uint256'
       }
     ],
+    name: 'createAndCollate',
+    outputs: [
+      {
+        internalType: 'address',
+        name: 'pool',
+        type: 'address'
+      }
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [],
     name: 'createNominationPool',
     outputs: [
       {
@@ -532,8 +534,32 @@ export const abi = [
       },
       {
         internalType: 'uint256',
-        name: 'depositId',
+        name: 'commission',
         type: 'uint256'
+      }
+    ],
+    name: 'predictVotes',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'collator',
+        type: 'address'
+      },
+      {
+        internalType: 'uint256[]',
+        name: 'depositIds',
+        type: 'uint256[]'
       },
       {
         internalType: 'address',
@@ -546,7 +572,7 @@ export const abi = [
         type: 'address'
       }
     ],
-    name: 'stakeDeposit',
+    name: 'stakeDeposits',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
@@ -730,9 +756,27 @@ export const abi = [
   {
     inputs: [
       {
-        internalType: 'uint256',
-        name: 'depositId',
-        type: 'uint256'
+        internalType: 'address',
+        name: 'prev',
+        type: 'address'
+      }
+    ],
+    name: 'stopCollation',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'collator',
+        type: 'address'
+      },
+      {
+        internalType: 'uint256[]',
+        name: 'depositIds',
+        type: 'uint256[]'
       },
       {
         internalType: 'address',
@@ -745,7 +789,7 @@ export const abi = [
         type: 'address'
       }
     ],
-    name: 'unstakeDeposit',
+    name: 'unstakeDeposits',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
@@ -774,6 +818,29 @@ export const abi = [
       }
     ],
     name: 'unstakeRING',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'commission',
+        type: 'uint256'
+      },
+      {
+        internalType: 'address',
+        name: 'oldPrev',
+        type: 'address'
+      },
+      {
+        internalType: 'address',
+        name: 'newPrev',
+        type: 'address'
+      }
+    ],
+    name: 'updateCommission',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function'
