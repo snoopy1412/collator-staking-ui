@@ -1,8 +1,8 @@
 import { useCallback, useState, useMemo } from 'react';
 import { Button, Select, SelectItem } from '@nextui-org/react';
-
 import useWalletStatus from '@/hooks/useWalletStatus';
 import useBalance from '@/hooks/useBalance';
+import { useDebouncedState } from '@/hooks/useDebouncedState';
 import AmountInput from '@/components/amount-input-with-balance';
 import TransactionStatus from '@/components/transaction-status';
 import Rewards from './rewards';
@@ -17,42 +17,49 @@ const terms = new Array(36).fill(0).map((_, index) => index + 1);
 const Deposit = () => {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
-  const [amount, setAmount] = useState<string | undefined>('0');
+  const {
+    value: amount,
+    debouncedValue: debounceAmount,
+    handleChange: handleAmountChange,
+    reset: resetAmount
+  } = useDebouncedState<string>({
+    initialValue: '0',
+    delay: 500
+  });
   const [selectedMonthPeriod, setSelectedMonthPeriod] = useState<SharedSelection>(new Set());
   const { isEnabled, ktonInfo } = useWalletStatus();
   const { formatted, isLoading, data: balance, refetch: refetchBalance } = useBalance();
   const { handleDeposit, isPending: isPendingDeposit } = useDeposit();
-  const computeInterest = useComputeInterest(amount, selectedMonthPeriod?.currentKey);
-
-  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-  }, []);
+  const computeInterest = useComputeInterest(debounceAmount, selectedMonthPeriod?.currentKey);
 
   const handleSelectionChange = useCallback((keys: SharedSelection) => {
     setSelectedMonthPeriod(keys as Set<string>);
   }, []);
 
   const handleConfirmDeposit = useCallback(async () => {
-    const hash = await handleDeposit({ months: selectedMonthPeriod?.currentKey, value: amount });
+    const hash = await handleDeposit({
+      months: selectedMonthPeriod?.currentKey,
+      value: debounceAmount
+    });
     setHash(hash);
-  }, [handleDeposit, selectedMonthPeriod, amount]);
+  }, [handleDeposit, selectedMonthPeriod, debounceAmount]);
 
   const handleCloseTransactionStatus = useCallback(() => {
     setHash(undefined);
-    setAmount('0');
+    resetAmount();
     setSelectedMonthPeriod(new Set());
     refetchBalance();
-  }, [refetchBalance]);
+  }, [refetchBalance, resetAmount]);
 
   const isDisabledDeposit = useMemo(() => {
     return (
       !isEnabled ||
-      !amount ||
-      amount === '0' ||
+      !debounceAmount ||
+      debounceAmount === '0' ||
       !selectedMonthPeriod?.currentKey ||
       computeInterest.isLoading
     );
-  }, [isEnabled, amount, selectedMonthPeriod, computeInterest.isLoading]);
+  }, [isEnabled, debounceAmount, selectedMonthPeriod, computeInterest.isLoading]);
 
   return (
     <>
