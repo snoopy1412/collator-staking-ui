@@ -20,8 +20,11 @@ const Loading = () => {
 export type DepositListRef = {
   getCheckedDepositIds: () => bigint[];
 };
+interface DepositListProps {
+  maxCount?: number;
+}
 
-const DepositList = forwardRef<DepositListRef>((_props, ref) => {
+const DepositList = forwardRef<DepositListRef, DepositListProps>(({ maxCount = 5 }, ref) => {
   const { chain } = useWalletStatus();
   const { depositList, isLoading: isDepositListLoading } = useUserDepositDetails({
     enabled: true
@@ -43,24 +46,34 @@ const DepositList = forwardRef<DepositListRef>((_props, ref) => {
       prevIds.includes(id) ? prevIds.filter((prevId) => prevId !== id) : [...prevIds, id]
     );
   }
-
-  return (
-    <ScrollShadow hideScrollBar className="flex max-h-[20rem] w-full flex-col gap-5" size={20}>
+  const content = (
+    <>
       {isDepositListLoading ? (
         <Loading />
       ) : depositList?.length ? (
-        depositList.map((deposit) => (
-          <DepositItem
-            key={deposit.tokenId}
-            item={deposit}
-            isChecked={checkedDepositIds.includes(deposit.tokenId)}
-            symbol={chain?.nativeCurrency?.symbol}
-            onChange={() => handleDepositChange(deposit.tokenId)}
-          />
-        ))
+        depositList
+          .slice(0, maxCount)
+          .map((deposit) => (
+            <DepositItem
+              key={deposit.tokenId}
+              item={deposit}
+              isChecked={checkedDepositIds.includes(deposit.tokenId)}
+              symbol={chain?.nativeCurrency?.symbol}
+              onChange={() => handleDepositChange(deposit.tokenId)}
+            />
+          ))
       ) : (
         <Empty label="No active deposit records" />
       )}
+    </>
+  );
+
+  if (!depositList || depositList.length <= maxCount) {
+    return <div className="flex max-h-[20rem] w-full flex-col gap-5">{content}</div>;
+  }
+  return (
+    <ScrollShadow hideScrollBar className="flex max-h-[20rem] w-full flex-col gap-5" size={20}>
+      {content}
     </ScrollShadow>
   );
 });
