@@ -8,9 +8,11 @@ import { MAX_DOM_COUNT, MAX_ITEM_COUNT } from '@/config/site';
 
 import Item from './item';
 
+import type { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';
+
 interface StakeListProps {
-  data?: any[];
-  onClick: (item: any) => void;
+  data?: StakingAccountWithStatus[];
+  onClick: (item: StakingAccountWithStatus) => void;
   isLoading: boolean;
 }
 
@@ -29,10 +31,11 @@ const StakeList = ({ data, isLoading, onClick }: StakeListProps) => {
   const Row = useCallback(
     ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const item = data?.[index];
+      if (!item) return null;
       return (
         <Item
           key={item.id}
-          {...item}
+          item={item}
           onClick={() => onClick(item)}
           style={{
             ...style,
@@ -62,7 +65,7 @@ const StakeList = ({ data, isLoading, onClick }: StakeListProps) => {
         }}
       >
         {data.map((item) => (
-          <Item key={item.id} {...item} onClick={() => onClick(item)} />
+          <Item key={item.id} item={item} onClick={() => onClick(item)} />
         ))}
       </ScrollShadow>
     );

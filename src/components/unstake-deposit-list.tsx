@@ -1,58 +1,37 @@
-import { ScrollShadow, Skeleton } from '@nextui-org/react';
-import DepositItem from './deposit-item';
-import { DepositInfo, useUserDepositDetails } from '@/hooks/useUserDepositDetails';
+import { ScrollShadow } from '@nextui-org/react';
+import DepositItem from './unstake-deposit-item';
 import useWalletStatus from '@/hooks/useWalletStatus';
 import { useState, forwardRef, useImperativeHandle, useEffect, useCallback } from 'react';
 import Empty from './empty';
-
-const Loading = () => {
-  return (
-    <>
-      <Skeleton className="h-8 w-full rounded-medium" />
-      <Skeleton className="h-8 w-full rounded-medium" />
-      <Skeleton className="h-8 w-full rounded-medium" />
-      <Skeleton className="h-8 w-full rounded-medium" />
-      <Skeleton className="h-8 w-full rounded-medium" />
-    </>
-  );
-};
+import { StakedDepositInfo } from '@/view/stake/_hooks/staked';
 
 export type DepositListRef = {
-  refetch: () => void;
-  resetAndRefetch: () => void;
+  reset: () => void;
 };
 interface DepositListProps {
   maxCount?: number;
-  onCheckedDepositsChange: (deposits: DepositInfo[]) => void;
+  deposits: StakedDepositInfo[];
+  onCheckedDepositsChange: (deposits: StakedDepositInfo[]) => void;
 }
 
-const DepositList = forwardRef<DepositListRef, DepositListProps>(
-  ({ maxCount = 5, onCheckedDepositsChange }, ref) => {
-    const [checkedDeposits, setCheckedDeposits] = useState<DepositInfo[]>([]);
+const UnstakeDepositList = forwardRef<DepositListRef, DepositListProps>(
+  ({ maxCount = 5, deposits, onCheckedDepositsChange }, ref) => {
+    const [checkedDeposits, setCheckedDeposits] = useState<StakedDepositInfo[]>([]);
 
     const { chain } = useWalletStatus();
-    const {
-      depositList,
-      isLoading: isDepositListLoading,
-      refetch
-    } = useUserDepositDetails({
-      enabled: true
-    });
 
-    const resetAndRefetch = useCallback(() => {
+    const reset = useCallback(() => {
       setCheckedDeposits([]);
-      refetch();
-    }, [refetch]);
+    }, []);
 
     useImperativeHandle(
       ref,
       () => ({
-        refetch,
-        resetAndRefetch
+        reset
       }),
-      [refetch, resetAndRefetch]
+      [reset]
     );
-    function handleDepositChange(deposit: DepositInfo) {
+    function handleDepositChange(deposit: StakedDepositInfo) {
       setCheckedDeposits((prevDeposits) =>
         prevDeposits.includes(deposit)
           ? prevDeposits.filter((prevDeposit) => prevDeposit.tokenId !== deposit.tokenId)
@@ -66,10 +45,8 @@ const DepositList = forwardRef<DepositListRef, DepositListProps>(
 
     const content = (
       <>
-        {isDepositListLoading ? (
-          <Loading />
-        ) : depositList?.length ? (
-          depositList
+        {deposits?.length ? (
+          deposits
             .slice(0, maxCount)
             .map((deposit) => (
               <DepositItem
@@ -86,7 +63,7 @@ const DepositList = forwardRef<DepositListRef, DepositListProps>(
       </>
     );
 
-    if (!depositList || depositList.length <= maxCount) {
+    if (!deposits || deposits.length <= maxCount) {
       return <div className="flex max-h-[20rem] w-full flex-col gap-5">{content}</div>;
     }
     return (
@@ -97,4 +74,4 @@ const DepositList = forwardRef<DepositListRef, DepositListProps>(
   }
 );
 
-export default DepositList;
+export default UnstakeDepositList;

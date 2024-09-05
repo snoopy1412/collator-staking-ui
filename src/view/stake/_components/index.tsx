@@ -1,23 +1,39 @@
 import { Suspense, useCallback, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@nextui-org/react';
-
-import { getStakeData } from '@/faker-data';
+import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
 
 import StakeList from './list';
 import NewStake from './new';
 import MangeStake from './mange';
+import useStakingAccountWithStatus from '@/hooks/useStakingAccountWithStatus';
+
+import type { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';
+import useWalletStatus from '@/hooks/useWalletStatus';
 
 const StakePage = () => {
-  const { data, isLoading } = useQuery({
-    queryKey: ['stakes'],
-    queryFn: () => getStakeData()
+  const { currentChain } = useWalletStatus();
+  const [current, setCurrent] = useState<StakingAccountWithStatus | null>(null);
+  const {
+    collators,
+    activeCollators,
+    waitingCollators,
+    isLoading: isCollatorSetLoading,
+    refetch
+  } = useActiveAndWaitingCollators();
+
+  const { data: stakingAccount, isLoading: isStakingAccountLoading } = useStakingAccountWithStatus({
+    activeCollators,
+    waitingCollators
   });
+
+  console.log('stakingAccount', stakingAccount);
 
   const [isNewStakeOpen, setIsNewStakeOpen] = useState(false);
   const [isEditStakeOpen, setIsEditStakeOpen] = useState(false);
 
   const handleCloseNewStake = useCallback(() => {
+    console.log('1111111111111111111');
+
     setIsNewStakeOpen(false);
   }, []);
 
@@ -25,9 +41,11 @@ const StakePage = () => {
     setIsEditStakeOpen(false);
   }, []);
 
-  const handleClick = useCallback((item: any) => {
+  const handleClick = useCallback((item: StakingAccountWithStatus) => {
+    setCurrent(item);
     setIsEditStakeOpen(true);
   }, []);
+
   return (
     <Suspense
       fallback={
@@ -37,7 +55,11 @@ const StakePage = () => {
       }
     >
       <div className="flex flex-col gap-[1.25rem]">
-        <StakeList data={data} isLoading={isLoading} onClick={handleClick} />
+        <StakeList
+          data={stakingAccount}
+          isLoading={isStakingAccountLoading}
+          onClick={handleClick}
+        />
 
         <div className="flex flex-col gap-[0.62rem]">
           <Button className="w-full" color="primary" onClick={() => setIsNewStakeOpen(true)}>
@@ -45,8 +67,23 @@ const StakePage = () => {
           </Button>
         </div>
       </div>
-      <NewStake isOpen={isNewStakeOpen} onClose={handleCloseNewStake} />
-      <MangeStake isOpen={isEditStakeOpen} onClose={handleCloseEditStake} symbol="ETH" />
+      <NewStake
+        isOpen={isNewStakeOpen}
+        onClose={handleCloseNewStake}
+        collators={collators}
+        activeCollators={activeCollators}
+        waitingCollators={waitingCollators}
+        isLoading={isCollatorSetLoading}
+      />
+      {current?.collator && (
+        <MangeStake
+          isOpen={isEditStakeOpen}
+          onClose={handleCloseEditStake}
+          symbol={currentChain?.nativeCurrency.symbol || ''}
+          collator={current?.collator}
+          collatorList={collators}
+        />
+      )}
     </Suspense>
   );
 };

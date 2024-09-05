@@ -137,6 +137,25 @@ export const abi = [
       {
         indexed: true,
         internalType: 'address',
+        name: 'collator',
+        type: 'address'
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'reward',
+        type: 'uint256'
+      }
+    ],
+    name: 'RewardDistributed',
+    type: 'event'
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
         name: 'pool',
         type: 'address'
       },
@@ -274,6 +293,30 @@ export const abi = [
       }
     ],
     stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'commission',
+        type: 'uint256'
+      },
+      {
+        internalType: 'uint256',
+        name: 'assets',
+        type: 'uint256'
+      }
+    ],
+    name: 'assetsToVotes',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256'
+      }
+    ],
+    stateMutability: 'pure',
     type: 'function'
   },
   {
@@ -520,30 +563,6 @@ export const abi = [
         internalType: 'address',
         name: '',
         type: 'address'
-      }
-    ],
-    stateMutability: 'view',
-    type: 'function'
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'collator',
-        type: 'address'
-      },
-      {
-        internalType: 'uint256',
-        name: 'commission',
-        type: 'uint256'
-      }
-    ],
-    name: 'predictVotes',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256'
       }
     ],
     stateMutability: 'view',
@@ -865,3 +884,5 @@ export const abi = [
     type: 'function'
   }
 ] as const;
+
+// staked 还有一个是 unstake 的时间

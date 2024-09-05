@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   ModalContent,
@@ -13,39 +13,182 @@ import {
 import { ChevronDown, X } from 'lucide-react';
 
 import { TransitionPanel } from '@/components/transition-panel';
+import TransactionStatus from '@/components/transaction-status';
 import { stakeTabs } from '@/config/tabs';
 
-import StakeRing from './stake-ring';
+import StakeRing, { StakeRingRef } from './stake-ring';
 import StakeDeposit from './stake-deposit';
 import SelectCollator from './select-collator';
 
+import type { Key, SelectionKeys } from '@/types/ui';
+import type { CollatorSet } from '@/service/type';
+import Avatar from '@/components/avatar';
+import { toShortAddress } from '@/utils';
+import {
+  useIsApprovedForAll,
+  useApprovalForAll,
+  useDepositStake,
+  useRingStake
+} from '../../_hooks/stake';
+import { parseEther } from 'viem';
+import { DepositInfo } from '@/hooks/useUserDepositDetails';
 import type { DepositListRef } from '@/components/deposit-list';
-
-import type { Key } from 'react';
 
 interface NewStakeModalProps {
   onClose: () => void;
+  collators: CollatorSet[];
+  activeCollators: CollatorSet[];
+  waitingCollators: CollatorSet[];
+  isLoading: boolean;
   isOpen?: boolean;
 }
-const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
+const NewStakeModal = ({
+  onClose,
+  isOpen,
+  collators,
+  activeCollators,
+  waitingCollators,
+  isLoading
+}: NewStakeModalProps) => {
+  const stakeRingRef = useRef<StakeRingRef>(null);
   const depositListRef = useRef<DepositListRef>(null);
 
+  const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
+  const [approvalHash, setApprovalHash] = useState<`0x${string}` | undefined>(undefined);
+  const [amount, setAmount] = useState<string | undefined>('0');
   const [selected, setSelected] = useState<Key>(stakeTabs[0].key);
-  const [isStaking, setIsStaking] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [selection, setSelection] = useState<SelectionKeys>(new Set());
   const [selectCollatorOpen, setSelectCollatorOpen] = useState(false);
+  const [checkedDeposits, setCheckedDeposits] = useState<DepositInfo[]>([]);
+
+  const { data: isApprovedForAll, isLoading: isLoadingIsApprovedForAll } = useIsApprovedForAll();
+  console.log('isApprovedForAll', isApprovedForAll);
+
+  const selectedAddress = useMemo(() => {
+    return Array.from(selection)[0] as `0x${string}`;
+  }, [selection]);
+
+  const {
+    handleStake: handleRingStake,
+    isLoadingOldAndNewPrev: isLoadingOldAndNewPrevRing,
+    isPending: isPendingRingStake
+  } = useRingStake({
+    collators,
+    targetCollator: selectedAddress,
+    assets: !!amount && amount !== '0' ? parseEther(amount) : 0n
+  });
+
+  const { handleApprovalForAll, isPending: isPendingApprovalForAll } = useApprovalForAll();
+
+  const {
+    handleStake: handleDepositStake,
+    isLoadingOldAndNewPrev: isLoadingOldAndNewPrevDeposit,
+    isPending: isPendingDepositStake
+  } = useDepositStake({
+    collators,
+    targetCollator: selectedAddress,
+    deposits: checkedDeposits
+  });
+  const handleAmountChange = useCallback((amount: string) => {
+    setAmount(amount);
+  }, []);
+
+  const handleSelectionChange = useCallback((selection: SelectionKeys) => {
+    setSelection(selection);
+    const arr = Array.from(selection);
+    console.log('arr', arr);
+
+    if (arr.length !== 0) {
+      setSelectCollatorOpen(false);
+    }
+  }, []);
 
   const handleClose = useCallback(() => {
     setSelectCollatorOpen(false);
   }, []);
+
+  const handleStake = useCallback(async () => {
+    if (selected === 'stake-ring') {
+      const tx = await handleRingStake();
+      if (tx) {
+        setHash(tx);
+      }
+    } else if (selected === 'stake-deposit') {
+      const tx = await handleApprovalForAll();
+      if (tx) {
+        setApprovalHash(tx);
+      }
+    }
+  }, [selected, handleRingStake, handleApprovalForAll]);
+
+  const handleDepositStakeStart = useCallback(async () => {
+    const tx = await handleDepositStake();
+    if (tx) {
+      setApprovalHash(undefined);
+      setHash(tx);
+    }
+  }, [handleDepositStake]);
+
+  const handleTransactionSuccess = useCallback(() => {
+    if (selected === 'stake-ring') {
+      stakeRingRef.current?.resetBalanceAndAmount();
+    } else if (selected === 'stake-deposit') {
+      depositListRef.current?.resetAndRefetch();
+    }
+    setHash(undefined);
+  }, [selected]);
+
+  const handleTransactionFail = useCallback(() => {
+    setHash(undefined);
+  }, []);
+
+  // isDisabled 需要根据 selected 和 amount 来决定,每一种都是不一样的
+  const isDisabled = useMemo(() => {
+    if (selected === 'stake-ring') {
+      return amount === '0';
+    } else if (selected === 'stake-deposit') {
+      return checkedDeposits.length === 0;
+    }
+    return false;
+  }, [selected, amount, checkedDeposits]);
+
+  const isPending = useMemo(() => {
+    if (selected === 'stake-ring') {
+      return isLoadingOldAndNewPrevRing || isPendingRingStake;
+    } else if (selected === 'stake-deposit') {
+      return isLoadingIsApprovedForAll || isPendingApprovalForAll || isLoadingOldAndNewPrevDeposit;
+    }
+    return false;
+  }, [
+    isLoadingOldAndNewPrevRing,
+    isPendingRingStake,
+    isPendingApprovalForAll,
+    isLoadingOldAndNewPrevDeposit,
+    selected,
+    isLoadingIsApprovedForAll
+  ]);
+
+  const buttonText = useMemo(() => {
+    if (selected === 'stake-deposit' && isApprovedForAll) {
+      return 'Approve';
+    }
+    return 'Staking';
+  }, [selected, isApprovedForAll]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelection(new Set());
+    }
+  }, [isOpen]);
 
   return (
     <>
       <Modal
         placement="center"
         backdrop="blur"
+        isDismissable={false}
         isOpen={isOpen}
-        onOpenChange={onClose}
+        onClose={onClose}
         className="bg-background"
         classNames={{
           closeButton:
@@ -63,14 +206,26 @@ const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
           <ModalBody className="flex flex-col gap-[1.25rem] p-0 px-5 pb-5">
             <div
               className="flex cursor-pointer flex-col gap-[0.625rem] rounded-medium bg-secondary p-[0.62rem] transition-all hover:opacity-[var(--nextui-hover-opacity)] active:scale-[1.01]"
-              onClick={() => setSelectCollatorOpen(!selectCollatorOpen)}
+              onClick={() => setSelectCollatorOpen(true)}
             >
               <div className="text-[0.75rem] font-normal text-foreground/50">Collator</div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-[0.62rem]">
-                  <div className="size-[1.625rem] rounded-full bg-[#c6c6c6]"></div>
-                  <div className="text-[0.875rem] font-bold text-foreground">Select a collator</div>
-                </div>
+                {selectedAddress ? (
+                  <div className="flex items-center gap-[0.62rem]">
+                    <Avatar address={selectedAddress} className="size-[1.625rem]" />
+                    <div className="text-[0.875rem] font-bold text-foreground">
+                      {toShortAddress(selectedAddress)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-[0.62rem]">
+                    <div className="size-[1.625rem] rounded-full bg-[#c6c6c6]"></div>
+                    <div className="text-[0.875rem] font-bold text-foreground">
+                      Select a collator
+                    </div>
+                  </div>
+                )}
+
                 <ChevronDown
                   size={16}
                   strokeWidth={2}
@@ -119,28 +274,53 @@ const NewStakeModal = ({ onClose, isOpen }: NewStakeModalProps) => {
                 exit: { opacity: 0, filter: 'blur(4px)' }
               }}
             >
-              {selected === 'stake-ring' && <StakeRing />}
-              {selected === 'stake-deposit' && <StakeDeposit ref={depositListRef} />}
+              {selected === 'stake-ring' && (
+                <StakeRing ref={stakeRingRef} onAmountChange={handleAmountChange} />
+              )}
+              {selected === 'stake-deposit' && (
+                <StakeDeposit ref={depositListRef} onCheckedDepositsChange={setCheckedDeposits} />
+              )}
             </TransitionPanel>
 
             <Button
               color="primary"
-              onPress={() => {
-                setIsStaking(true);
-                setTimeout(() => {
-                  setIsStaking(false);
-                  setIsSuccess(true);
-                }, 3000);
-              }}
+              isDisabled={isDisabled}
+              onClick={handleStake}
+              isLoading={isPending}
               className="w-full font-bold"
             >
-              Stake
+              {buttonText}
             </Button>
           </ModalBody>
         </ModalContent>
       </Modal>
 
-      <SelectCollator isOpen={selectCollatorOpen} onClose={handleClose} />
+      <SelectCollator
+        isOpen={selectCollatorOpen}
+        onClose={handleClose}
+        activeCollators={activeCollators}
+        waitingCollators={waitingCollators}
+        isLoading={isLoading}
+        selection={selection}
+        onSelectionChange={handleSelectionChange}
+      />
+      {approvalHash && (
+        <TransactionStatus
+          hash={approvalHash}
+          title="Approval"
+          onSuccess={handleDepositStakeStart}
+          onFail={handleTransactionFail}
+          isLoading={isPendingDepositStake}
+        />
+      )}
+      {hash && (
+        <TransactionStatus
+          hash={hash}
+          title="Staking"
+          onSuccess={handleTransactionSuccess}
+          onFail={handleTransactionFail}
+        />
+      )}
     </>
   );
 };

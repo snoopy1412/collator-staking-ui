@@ -6,6 +6,7 @@ import {
   ModalBody,
   ModalContent,
   ModalHeader,
+  Spinner,
   Tooltip
 } from '@nextui-org/react';
 import { X } from 'lucide-react';
@@ -16,19 +17,52 @@ import StakeMore from './stake-more';
 import Unstake from './unstake';
 import StakeMoreDeposits from './stake-more-deposits';
 import UnstakeDeposits from './unstake-deposts';
+import { useStaked } from '../../_hooks/staked';
+import { formatEther } from 'viem';
+import FormattedNumberTooltip from '@/components/formatted-number-tooltip';
+import { CollatorSet } from '@/service/type';
 
 interface ManageStakeeProps {
   isOpen: boolean;
   onClose: () => void;
   symbol: string;
+  collatorList: CollatorSet[];
+  collator: `0x${string}`;
 }
 
-const fakerDays = 1;
-const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
+const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: ManageStakeeProps) => {
   const [isStakeMoreOpen, setIsStakeMoreOpen] = useState(false);
   const [isUnstakeOpen, setIsUnstakeOpen] = useState(false);
   const [isStakeMoreDepositsOpen, setIsStakeMoreDepositsOpen] = useState(false);
   const [isUnstakeDepositsOpen, setIsUnstakeDepositsOpen] = useState(false);
+
+  const { stakedRING, stakingLocks, stakedDeposits, isLoading, refetch } = useStaked({
+    collator
+  });
+
+  console.log('stakedDeposits', stakedDeposits);
+
+  const formattedStakedRING = useMemo(() => {
+    return stakedRING ? formatEther(stakedRING) : '0';
+  }, [stakedRING]);
+
+  const isLocked = useMemo(() => {
+    if (stakingLocks) {
+      const now = BigInt(Math.floor(Date.now() / 1000));
+      return stakingLocks > now;
+    }
+    return false;
+  }, [stakingLocks]);
+
+  const formattedStakedDeposits = useMemo(() => {
+    if (stakedDeposits?.length) {
+      const amount = stakedDeposits.reduce((acc, deposit) => {
+        return acc + deposit.amount;
+      }, 0n);
+      return formatEther(amount);
+    }
+    return '0';
+  }, [stakedDeposits]);
 
   const handleCloseStakeMore = useCallback(() => {
     setIsStakeMoreOpen(false);
@@ -47,16 +81,9 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
   }, []);
 
   const renderDays = useMemo(() => {
-    if (fakerDays > 1) {
-      return (
-        <span>
-          <span className="text-primary">{fakerDays}</span> days
-        </span>
-      );
-    }
     return (
       <span>
-        <span className="text-primary">{fakerDays}</span> day
+        <span className="text-primary">1</span> day
       </span>
     );
   }, []);
@@ -66,7 +93,7 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
       <Modal
         placement="center"
         isOpen={isOpen}
-        onOpenChange={onClose}
+        onClose={onClose}
         backdrop="blur"
         classNames={{
           closeButton:
@@ -80,42 +107,68 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
             Manage Stake
           </ModalHeader>
           <Divider />
-          <ModalBody className="flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
+          <ModalBody className="relative flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                <Spinner />
+              </div>
+            )}
+
             <div className="flex w-full flex-col gap-[0.62rem]">
               <div className="flex flex-col gap-[0.62rem] rounded-medium bg-secondary p-[0.62rem] hover:opacity-[var(--nextui-opacity-hover)]">
                 <p className="m-0 text-[0.875rem] text-foreground/50">Collator</p>
                 <div className="flex items-center justify-between">
-                  <AddressCard address="0x1234567890" name="Collator" copyable={false} />
+                  <AddressCard address={collator} copyable={false} />
                 </div>
               </div>
 
               <div className="flex flex-col gap-[0.62rem] rounded-medium bg-secondary p-[0.62rem] hover:opacity-[var(--nextui-opacity-hover)]">
                 <p className="m-0 text-[0.875rem] text-foreground/50">{symbol}</p>
                 <div className="flex items-center justify-between">
-                  <p className="m-0 text-[0.875rem] font-bold text-foreground">11,560</p>
+                  <FormattedNumberTooltip value={formattedStakedRING}>
+                    {(formattedValue) => (
+                      <p className="m-0 text-[0.875rem] font-bold text-foreground">
+                        {formattedValue}
+                      </p>
+                    )}
+                  </FormattedNumberTooltip>
                   <div className="flex items-center gap-[0.62rem]">
-                    <Tooltip
-                      content={
-                        <div className="max-w-[16.25rem] p-2 text-[0.75rem] font-normal text-foreground">
-                          You can perform the unstake operation {renderDays} after your last stake
-                          with the selected collator. You have {renderDays} remaining before you can
-                          unstake.
-                        </div>
-                      }
-                      closeDelay={0}
-                      color="default"
-                      showArrow
-                    >
+                    {isLocked ? (
+                      <Tooltip
+                        content={
+                          <div className="max-w-[16.25rem] p-2 text-[0.75rem] font-normal text-foreground">
+                            You can perform the unstake operation {renderDays} after your last stake
+                            with the selected collator. You have {renderDays} remaining before you
+                            can unstake.
+                          </div>
+                        }
+                        closeDelay={0}
+                        color="default"
+                        showArrow
+                      >
+                        <Button
+                          variant="flat"
+                          size="sm"
+                          color="primary"
+                          isDisabled
+                          className="font-bold"
+                          onClick={() => setIsUnstakeOpen(true)}
+                        >
+                          Unstake
+                        </Button>
+                      </Tooltip>
+                    ) : (
                       <Button
                         variant="flat"
                         size="sm"
                         color="primary"
+                        isDisabled={isLocked}
                         className="font-bold"
                         onClick={() => setIsUnstakeOpen(true)}
                       >
                         Unstake
                       </Button>
-                    </Tooltip>
+                    )}
 
                     <Button
                       size="sm"
@@ -132,17 +185,50 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
               <div className="flex flex-col gap-[0.62rem] rounded-medium bg-secondary p-[0.62rem] hover:opacity-[var(--nextui-opacity-hover)]">
                 <p className="m-0 text-[0.875rem] text-foreground/50">Deposit {symbol}</p>
                 <div className="flex items-center justify-between">
-                  <p className="m-0 text-[0.875rem] font-bold text-foreground">11,560</p>
+                  <FormattedNumberTooltip value={formattedStakedDeposits}>
+                    {(formattedValue) => (
+                      <p className="m-0 text-[0.875rem] font-bold text-foreground">
+                        {formattedValue}
+                      </p>
+                    )}
+                  </FormattedNumberTooltip>
                   <div className="flex items-center gap-[0.62rem]">
-                    <Button
-                      variant="flat"
-                      size="sm"
-                      color="primary"
-                      className="font-bold"
-                      onClick={() => setIsUnstakeDepositsOpen(true)}
-                    >
-                      Unstake
-                    </Button>
+                    {isLocked ? (
+                      <Tooltip
+                        content={
+                          <div className="max-w-[16.25rem] p-2 text-[0.75rem] font-normal text-foreground">
+                            You can perform the unstake operation {renderDays} after your last stake
+                            with the selected collator. You have {renderDays} remaining before you
+                            can unstake.
+                          </div>
+                        }
+                        closeDelay={0}
+                        color="default"
+                        showArrow
+                      >
+                        <Button
+                          variant="flat"
+                          size="sm"
+                          color="primary"
+                          isDisabled
+                          className="font-bold"
+                          onClick={() => setIsUnstakeDepositsOpen(true)}
+                        >
+                          Unstake
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Button
+                        variant="flat"
+                        size="sm"
+                        color="primary"
+                        isDisabled={isLocked}
+                        className="font-bold"
+                        onClick={() => setIsUnstakeDepositsOpen(true)}
+                      >
+                        Unstake
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       color="primary"
@@ -158,17 +244,34 @@ const ManageStake = ({ isOpen, onClose, symbol }: ManageStakeeProps) => {
           </ModalBody>
         </ModalContent>
       </Modal>
-      <StakeMore isOpen={isStakeMoreOpen} onClose={handleCloseStakeMore} symbol={symbol} />
-      <Unstake isOpen={isUnstakeOpen} onClose={handleCloseUnstake} symbol={symbol} />
+      <StakeMore
+        isOpen={isStakeMoreOpen}
+        onClose={handleCloseStakeMore}
+        collator={collator}
+        collatorList={collatorList}
+      />
+      <Unstake
+        isOpen={isUnstakeOpen}
+        onClose={handleCloseUnstake}
+        symbol={symbol}
+        totalAmount={formattedStakedRING}
+        refreshAmount={refetch}
+        collator={collator}
+        collatorList={collatorList}
+      />
       <StakeMoreDeposits
         isOpen={isStakeMoreDepositsOpen}
         onClose={handleCloseStakeMoreDeposits}
-        symbol={symbol}
+        collators={collatorList}
+        targetCollator={collator}
       />
       <UnstakeDeposits
         isOpen={isUnstakeDepositsOpen}
         onClose={handleCloseUnstakeDeposits}
         symbol={symbol}
+        deposits={stakedDeposits}
+        collators={collatorList}
+        targetCollator={collator}
       />
     </>
   );

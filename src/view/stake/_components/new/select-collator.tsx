@@ -1,38 +1,69 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { cn, Modal, ModalBody, ModalContent, Tab, Tabs } from '@nextui-org/react';
 import { X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-
-import { getActivePools } from '@/faker-data';
 import { selectCollatorTabs } from '@/config/tabs';
-
 import SelectCollatorTable from './select-collator-table';
+import type { CollatorSet } from '@/service/type';
+import type { Key, SelectionKeys } from '@/types/ui';
 
 interface SelectCollatorProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectionChange: (keys: SelectionKeys) => void;
+  selection: SelectionKeys;
+  activeCollators: CollatorSet[];
+  waitingCollators: CollatorSet[];
+  isLoading: boolean;
 }
 
-const SelectCollator = ({ isOpen, onClose }: SelectCollatorProps) => {
-  //
-  const { data, isLoading } = useQuery({
-    queryKey: ['collators'],
-    queryFn: () => getActivePools()
-  });
+const SelectCollator = ({
+  isOpen,
+  onClose,
+  selection,
+  onSelectionChange,
+  activeCollators,
+  waitingCollators,
+  isLoading
+}: SelectCollatorProps) => {
+  const [selected, setSelected] = useState<Key>(selectCollatorTabs[0].key);
+  const [keyword, setKeyword] = useState('');
+  const handleSearchChange = useCallback((keyword: string) => {
+    setKeyword(keyword);
+  }, []);
 
-  const [filterValue, setFilterValue] = useState('');
-  const onClear = () => {
-    setFilterValue('');
-  };
-  const onSearchChange = (value: string) => {
-    setFilterValue(value);
-  };
+  const handleSelectionChange = useCallback(
+    (selection: SelectionKeys) => {
+      const arr = Array.from(selection);
+      if (arr.length) {
+        onSelectionChange(selection);
+      }
+    },
+    [onSelectionChange]
+  );
+
+  const data = useMemo(() => {
+    let filteredData: CollatorSet[] = [];
+    if (selected === 'active-pool') {
+      filteredData = activeCollators || [];
+    } else if (selected === 'waiting-pool') {
+      filteredData = waitingCollators || [];
+    }
+
+    if (keyword) {
+      const lowercaseKeyword = keyword.toLowerCase();
+      return filteredData.filter((collator) =>
+        collator.address.toLowerCase().includes(lowercaseKeyword)
+      );
+    }
+
+    return filteredData;
+  }, [activeCollators, waitingCollators, selected, keyword]);
   return (
     <>
       <Modal
         placement="center"
         isOpen={isOpen}
-        onOpenChange={onClose}
+        onClose={onClose}
         size="xl"
         className="bg-background"
         classNames={{
@@ -47,6 +78,8 @@ const SelectCollator = ({ isOpen, onClose }: SelectCollatorProps) => {
               aria-label="Options"
               color="primary"
               variant="underlined"
+              selectedKey={selected}
+              onSelectionChange={setSelected}
               className="-mt-3"
               classNames={{
                 tabList: 'gap-6 w-full relative rounded-none p-0 border-b border-divider',
@@ -67,7 +100,15 @@ const SelectCollator = ({ isOpen, onClose }: SelectCollatorProps) => {
               ))}
             </Tabs>
 
-            <SelectCollatorTable symbol="RING" data={data} isLoading={isLoading} />
+            <SelectCollatorTable
+              symbol="RING"
+              data={data}
+              selection={selection}
+              isLoading={isLoading}
+              keyword={keyword}
+              onSearchChange={handleSearchChange}
+              onSelectionChange={handleSelectionChange}
+            />
           </ModalBody>
         </ModalContent>
       </Modal>

@@ -4,8 +4,13 @@ import { Button } from '@nextui-org/react';
 interface TransactionSuccessProps {
   title?: React.ReactNode;
   onOk?: () => void;
+  isLoading?: boolean;
 }
-const TransactionSuccess = ({ onOk, title = 'Transaction' }: TransactionSuccessProps) => {
+const TransactionSuccess = ({
+  onOk,
+  title = 'Transaction',
+  isLoading
+}: TransactionSuccessProps) => {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-5">
       <img src="/images/common/success-icon.svg" alt="success-icon" className="size-20" />
@@ -14,7 +19,7 @@ const TransactionSuccess = ({ onOk, title = 'Transaction' }: TransactionSuccessP
       </div>
 
       <div className="flex w-full flex-col gap-[0.62rem]">
-        <Button color="primary" className="w-full" onClick={onOk}>
+        <Button color="primary" className="w-full" onClick={onOk} isLoading={isLoading}>
           Ok
         </Button>
       </div>

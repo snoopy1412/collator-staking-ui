@@ -11,31 +11,37 @@ interface TransactionStatusProps {
   title: string;
   onSuccess?: () => void;
   onFail?: () => void;
+  isLoading?: boolean;
 }
 
 const TransactionStatus: React.FC<TransactionStatusProps> = ({
   hash,
   title,
   onSuccess,
-  onFail
+  onFail,
+  isLoading
 }) => {
-  const { isLoading, isSuccess, isError } = useWaitForTransactionReceipt({
+  const {
+    isLoading: isLoadingProps,
+    isSuccess,
+    isError
+  } = useWaitForTransactionReceipt({
     hash,
     query: {
       enabled: !!hash
     }
   });
   const renderContent = useMemo(() => {
-    if (isLoading) {
+    if (isLoadingProps) {
       return <TransactionPending />;
     }
     if (isSuccess) {
-      return <TransactionSuccess onOk={onSuccess} title={title} />;
+      return <TransactionSuccess onOk={onSuccess} title={title} isLoading={isLoading} />;
     }
     if (isError) {
       return <TransactionFail onOk={onFail} title={title} />;
     }
-  }, [isLoading, isSuccess, isError, title, onSuccess, onFail]);
+  }, [isLoadingProps, isSuccess, isError, title, onSuccess, onFail, isLoading]);
 
   return (
     <Modal isOpen hideCloseButton placement="center" className="bg-background">

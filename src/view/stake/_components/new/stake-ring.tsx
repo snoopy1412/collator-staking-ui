@@ -1,19 +1,41 @@
+import { useCallback, useState, memo, forwardRef, useImperativeHandle } from 'react';
 import { Divider, Link } from '@nextui-org/react';
 
 import AmountInputWithBalance from '@/components/amount-input-with-balance';
 import useBalance from '@/hooks/useBalance';
-import { useCallback, useState } from 'react';
 
 interface StakeRingProps {
   className?: string;
+  onAmountChange?: (amount: string) => void;
 }
-const StakeRing = ({ className }: StakeRingProps) => {
+
+export type StakeRingRef = {
+  resetBalanceAndAmount: () => void;
+};
+const StakeRing = forwardRef<StakeRingRef, StakeRingProps>(({ className, onAmountChange }, ref) => {
   const [amount, setAmount] = useState<string | undefined>('0');
   const { formatted, isLoading, data: balance, refetch: refetchBalance } = useBalance();
 
-  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setAmount(e.target.value);
-  }, []);
+  const resetBalanceAndAmount = useCallback(() => {
+    setAmount('0');
+    refetchBalance();
+  }, [refetchBalance]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      resetBalanceAndAmount
+    }),
+    [resetBalanceAndAmount]
+  );
+
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAmount(e.target.value);
+      onAmountChange?.(e.target.value);
+    },
+    [onAmountChange]
+  );
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -47,6 +69,6 @@ const StakeRing = ({ className }: StakeRingProps) => {
       </p>
     </div>
   );
-};
+});
 
-export default StakeRing;
+export default memo(StakeRing);

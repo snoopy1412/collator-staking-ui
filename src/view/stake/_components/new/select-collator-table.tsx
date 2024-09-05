@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { Key, useCallback, useTransition } from 'react';
 import {
   Table,
   TableHeader,
@@ -13,35 +13,57 @@ import {
 import { SearchIcon } from 'lucide-react';
 
 import AddressCard from '@/components/address-card';
+import type { CollatorSet } from '@/service/type';
+import type { SelectionKeys } from '@/types/ui';
 
 interface SelectCollatorTableProps {
   symbol: string;
-  data: any;
+  data: CollatorSet[];
   isLoading: boolean;
+  keyword?: string;
+  selection: SelectionKeys;
+  onSearchChange?: (keyword: string) => void;
+  onSelectionChange?: (keys: SelectionKeys) => void;
 }
 
-const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTableProps) => {
-  const [filterValue, setFilterValue] = useState('');
-  const onClear = () => {
-    setFilterValue('');
-  };
-  const onSearchChange = (value: string) => {
-    setFilterValue(value);
-  };
-  const renderCell = useCallback((item: any, columnKey: string) => {
-    const cellValue = item[columnKey];
+const SelectCollatorTable = ({
+  symbol,
+  keyword,
+  data,
+  isLoading,
+  selection,
+  onSearchChange,
+  onSelectionChange
+}: SelectCollatorTableProps) => {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSearchChange = useCallback(
+    (keyword: string) => {
+      startTransition(() => {
+        onSearchChange?.(keyword);
+      });
+    },
+    [onSearchChange]
+  );
+
+  const handleClear = useCallback(() => {
+    onSearchChange?.('');
+  }, [onSearchChange]);
+
+  const renderCell = useCallback((item: CollatorSet, columnKey: Key) => {
+    const cellValue = item[columnKey as keyof CollatorSet];
 
     switch (columnKey) {
       case 'collator':
-        return <AddressCard address="0x3d6d656c1bf92f7028Ce4C352563E1C363C58ED5" name="darwinia" />;
+        return <AddressCard address={item.address as `0x${string}`} />;
       case 'balance':
-        return 999.999;
+        return item.assets;
       case 'commission':
-        return '45.00%';
+        return cellValue ? `${cellValue}%` : '-';
       case 'session':
         return '34';
       default:
-        return cellValue;
+        return null;
     }
   }, []);
 
@@ -52,20 +74,22 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
         classNames={{
           inputWrapper:
             'w-[18.75rem] h-10 items-center gap-[0.3125rem] rounded-medium dark:!bg-secondary',
-          input: 'placeholder:text-foreground/50 text-[0.875rem] text-foreground '
+          input: 'placeholder:text-foreground/50 text-[0.875rem] text-foreground'
         }}
         placeholder="Search for a collator"
         startContent={<SearchIcon className="text-foreground/50" />}
-        value={filterValue}
+        value={keyword}
         aria-label="Search for a collator"
-        onClear={() => onClear()}
-        onValueChange={onSearchChange}
+        onClear={handleClear}
+        onValueChange={handleSearchChange}
       />
       <Table
         aria-label="Select collator table"
         color="primary"
         selectionMode="single"
-        defaultSelectedKeys={['2']}
+        selectionBehavior="replace"
+        selectedKeys={selection}
+        onSelectionChange={onSelectionChange}
         removeWrapper
         classNames={{
           base: cn(isLoading ? '' : 'min-w-[100%] overflow-x-auto'),
@@ -74,7 +98,7 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
         layout="fixed"
       >
         <TableHeader>
-          <TableColumn className="w-[14rem] bg-secondary" key="collator">
+          <TableColumn className="w-[10rem] bg-secondary" key="collator">
             Collator
           </TableColumn>
           <TableColumn className="w-[5rem] bg-secondary" key="balance">
@@ -84,11 +108,11 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
             Commission
           </TableColumn>
           <TableColumn
-            className="w-[4.74rem] whitespace-normal bg-secondary"
+            className="w-[6rem] whitespace-normal bg-secondary"
             key="session"
             align="end"
           >
-            Blocks Last Session
+            Last Session rewards
           </TableColumn>
         </TableHeader>
         <TableBody
@@ -98,11 +122,12 @@ const SelectCollatorTable = ({ symbol, data, isLoading }: SelectCollatorTablePro
               <Spinner />
             </div>
           }
-          loadingState={isLoading ? 'loading' : 'idle'}
+          emptyContent={<div className="text-center">No records</div>}
+          loadingState={isLoading || isPending ? 'loading' : 'idle'}
         >
-          {(item: any) => (
+          {(item: CollatorSet) => (
             <TableRow key={item?.id}>
-              {(columnKey: any) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+              {(columnKey: Key) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
             </TableRow>
           )}
         </TableBody>

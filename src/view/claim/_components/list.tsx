@@ -7,13 +7,14 @@ import ClaimLoading from './loading';
 import { MAX_DOM_COUNT, MAX_ITEM_COUNT } from '@/config/site';
 
 import Item from './item';
+import type { ClaimableReward } from './item';
 
 const itemSize = 82;
 const itemGap = 20;
 
 interface StakeListProps {
-  data?: any[];
-  onClick: (item: any) => void;
+  data?: ClaimableReward[];
+  onClick: (item: ClaimableReward) => void;
   isLoading: boolean;
 }
 
@@ -30,15 +31,17 @@ const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
     ({ index, style }: { index: number; style: React.CSSProperties }) => {
       const item = data?.[index];
       return (
-        <Item
-          key={item.id}
-          {...item}
-          onClick={() => onClick(item)}
-          style={{
-            ...style,
-            paddingRight: 'var(--scrollbar-gap)'
-          }}
-        />
+        item && (
+          <Item
+            key={item?.id}
+            reward={item}
+            onClick={() => onClick(item)}
+            style={{
+              ...style,
+              paddingRight: 'var(--scrollbar-gap)'
+            }}
+          />
+        )
       );
     },
     [data, onClick]
@@ -62,7 +65,7 @@ const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
         }}
       >
         {data.map((item) => (
-          <Item key={item.id} {...item} onClick={() => onClick(item)} />
+          <Item key={item.id} reward={item} onClick={() => onClick(item)} />
         ))}
       </ScrollShadow>
     );

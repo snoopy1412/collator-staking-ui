@@ -11,7 +11,7 @@ const StopCollation = ({ isOpen, onClose }: EditStakeProps) => {
     <Modal
       placement="center"
       isOpen={isOpen}
-      onOpenChange={onClose}
+      onClose={onClose}
       backdrop="blur"
       className="bg-background"
       classNames={{
