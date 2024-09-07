@@ -28,6 +28,7 @@ function usePreview() {
         address: collatorAddress,
         abi: collatorAbi,
         functionName: 'getSessionKey',
+        // TODO
         args: [fromBytes(twox64Concat(address as `0x${string}`), 'hex') as unknown as `0x${string}`]
       },
       {
