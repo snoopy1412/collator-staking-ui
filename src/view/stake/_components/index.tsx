@@ -21,7 +21,11 @@ const StakePage = () => {
     refetch
   } = useActiveAndWaitingCollators();
 
-  const { data: stakingAccount, isLoading: isStakingAccountLoading } = useStakingAccountWithStatus({
+  const {
+    data: stakingAccount,
+    isLoading: isStakingAccountLoading,
+    refetch: refetchStakingAccount
+  } = useStakingAccountWithStatus({
     activeCollators,
     waitingCollators
   });

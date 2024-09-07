@@ -15,7 +15,7 @@ interface ItemProps {
 const Item = ({ item, onClick, style }: ItemProps) => {
   return (
     <div style={style}>
-      <div className="flex h-[82px] w-full flex-col gap-[0.62rem] rounded-medium bg-secondary p-[0.62rem]">
+      <div className="flex h-[72px] w-full flex-col gap-[0.62rem] rounded-medium bg-secondary p-[0.62rem]">
         <div className="flex items-center justify-between text-[0.75rem] font-normal text-foreground/50">
           {item?.status && <CollatorStatus status={item?.status} />}
 

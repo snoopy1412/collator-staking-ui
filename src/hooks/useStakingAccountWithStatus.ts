@@ -17,15 +17,9 @@ const useStakingAccountWithStatus = ({
 }: UseStakingAccountWithStatusProps) => {
   const { address, currentChainId } = useWalletStatus();
 
-  const { data, isLoading, refetch } = useStakingAccount({
-    where: {
-      account: {
-        _eq: address
-      },
-      chainId: {
-        _eq: currentChainId
-      }
-    }
+  const { data, isLoading, isRefetching, refetch } = useStakingAccount({
+    address,
+    currentChainId
   });
   const processedData = useMemo<StakingAccountWithStatus[]>(() => {
     if (!data) return [];
@@ -52,7 +46,8 @@ const useStakingAccountWithStatus = ({
 
   return {
     data: processedData,
-    isLoading,
+    isLoading: isLoading || isRefetching,
+    isRefetching,
     refetch
   };
 };

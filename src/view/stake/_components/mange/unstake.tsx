@@ -9,22 +9,24 @@ import { CollatorSet } from '@/service/type';
 
 interface EditStakeProps {
   isOpen: boolean;
-  onClose: () => void;
+
   symbol: string;
   collator: `0x${string}`;
   collatorList: CollatorSet[];
   totalAmount: string;
-  refreshAmount?: () => void;
+  onClose: () => void;
+  onOk: () => void;
 }
 
 const Unstake = ({
   isOpen,
-  onClose,
+
   symbol,
   collator,
   collatorList,
   totalAmount,
-  refreshAmount
+  onClose,
+  onOk
 }: EditStakeProps) => {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [amount, setAmount] = useState<string>('0');
@@ -51,9 +53,8 @@ const Unstake = ({
 
   const handleSuccess = useCallback(() => {
     setHash(undefined);
-    refreshAmount?.();
-    onClose();
-  }, [onClose, refreshAmount]);
+    onOk?.();
+  }, [onOk]);
   return (
     <>
       <Modal
@@ -94,14 +95,12 @@ const Unstake = ({
           </ModalBody>
         </ModalContent>
       </Modal>
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          onFail={handleFail}
-          onSuccess={handleSuccess}
-          title="Unstake"
-        />
-      )}
+      <TransactionStatus
+        hash={hash}
+        onFail={handleFail}
+        onSuccess={handleSuccess}
+        title="Unstake"
+      />
     </>
   );
 };

@@ -35,12 +35,9 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
   const [isUnstakeOpen, setIsUnstakeOpen] = useState(false);
   const [isStakeMoreDepositsOpen, setIsStakeMoreDepositsOpen] = useState(false);
   const [isUnstakeDepositsOpen, setIsUnstakeDepositsOpen] = useState(false);
-
   const { stakedRING, stakingLocks, stakedDeposits, isLoading, refetch } = useStaked({
     collator
   });
-
-  console.log('stakedDeposits', stakedDeposits);
 
   const formattedStakedRING = useMemo(() => {
     return stakedRING ? formatEther(stakedRING) : '0';
@@ -54,6 +51,92 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
     return false;
   }, [stakingLocks]);
 
+  const handleOkStakeMore = useCallback(() => {
+    setIsStakeMoreOpen(false);
+    refetch();
+  }, [refetch]);
+
+  const handleCloseStakeMore = useCallback(() => {
+    setIsStakeMoreOpen(false);
+  }, []);
+
+  const handleOkUnstake = useCallback(() => {
+    setIsUnstakeOpen(false);
+    refetch();
+  }, [refetch]);
+
+  const handleCloseUnstake = useCallback(() => {
+    setIsUnstakeOpen(false);
+  }, []);
+
+  const handleOkStakeMoreDeposits = useCallback(() => {
+    setIsStakeMoreDepositsOpen(false);
+    refetch();
+  }, [refetch]);
+
+  const handleCloseStakeMoreDeposits = useCallback(() => {
+    setIsStakeMoreDepositsOpen(false);
+  }, []);
+
+  const handleOkUnstakeDeposits = useCallback(() => {
+    setIsUnstakeDepositsOpen(false);
+    refetch();
+  }, [refetch]);
+
+  const handleCloseUnstakeDeposits = useCallback(() => {
+    setIsUnstakeDepositsOpen(false);
+  }, []);
+
+  const handleUnstakeRingOpen = useCallback(() => {
+    setIsUnstakeOpen(true);
+  }, []);
+  const handleStakeMoreOpen = useCallback(() => {
+    setIsStakeMoreOpen(true);
+  }, []);
+
+  const handleUnstakeDepositsOpen = useCallback(() => {
+    setIsUnstakeDepositsOpen(true);
+  }, []);
+  const handleStakeMoreDepositsOpen = useCallback(() => {
+    setIsStakeMoreDepositsOpen(true);
+  }, []);
+
+  const UnstakeButton = useMemo(() => {
+    return (
+      <Button
+        variant="flat"
+        size="sm"
+        color="primary"
+        isDisabled={isLocked}
+        className="font-bold"
+        onClick={handleUnstakeRingOpen}
+      >
+        Unstake
+      </Button>
+    );
+  }, [handleUnstakeRingOpen, isLocked]);
+
+  const UnstakeDepositsButton = useMemo(() => {
+    return (
+      <Button
+        variant="flat"
+        size="sm"
+        color="primary"
+        isDisabled={isLocked}
+        className="font-bold"
+        onClick={handleUnstakeDepositsOpen}
+      >
+        Unstake
+      </Button>
+    );
+  }, [handleUnstakeDepositsOpen, isLocked]);
+  const renderDays = useMemo(() => {
+    return (
+      <span>
+        <span className="text-primary">1</span> day
+      </span>
+    );
+  }, []);
   const formattedStakedDeposits = useMemo(() => {
     if (stakedDeposits?.length) {
       const amount = stakedDeposits.reduce((acc, deposit) => {
@@ -63,31 +146,6 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
     }
     return '0';
   }, [stakedDeposits]);
-
-  const handleCloseStakeMore = useCallback(() => {
-    setIsStakeMoreOpen(false);
-  }, []);
-
-  const handleCloseUnstake = useCallback(() => {
-    setIsUnstakeOpen(false);
-  }, []);
-
-  const handleCloseStakeMoreDeposits = useCallback(() => {
-    setIsStakeMoreDepositsOpen(false);
-  }, []);
-
-  const handleCloseUnstakeDeposits = useCallback(() => {
-    setIsUnstakeDepositsOpen(false);
-  }, []);
-
-  const renderDays = useMemo(() => {
-    return (
-      <span>
-        <span className="text-primary">1</span> day
-      </span>
-    );
-  }, []);
-
   return (
     <>
       <Modal
@@ -146,34 +204,16 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
                         color="default"
                         showArrow
                       >
-                        <Button
-                          variant="flat"
-                          size="sm"
-                          color="primary"
-                          isDisabled
-                          className="font-bold"
-                          onClick={() => setIsUnstakeOpen(true)}
-                        >
-                          Unstake
-                        </Button>
+                        <div>{UnstakeButton}</div>
                       </Tooltip>
                     ) : (
-                      <Button
-                        variant="flat"
-                        size="sm"
-                        color="primary"
-                        isDisabled={isLocked}
-                        className="font-bold"
-                        onClick={() => setIsUnstakeOpen(true)}
-                      >
-                        Unstake
-                      </Button>
+                      UnstakeButton
                     )}
 
                     <Button
                       size="sm"
                       color="primary"
-                      onClick={() => setIsStakeMoreOpen(true)}
+                      onClick={handleStakeMoreOpen}
                       className="font-bold"
                     >
                       Stake
@@ -206,34 +246,16 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
                         color="default"
                         showArrow
                       >
-                        <Button
-                          variant="flat"
-                          size="sm"
-                          color="primary"
-                          isDisabled
-                          className="font-bold"
-                          onClick={() => setIsUnstakeDepositsOpen(true)}
-                        >
-                          Unstake
-                        </Button>
+                        <div>{UnstakeDepositsButton}</div>
                       </Tooltip>
                     ) : (
-                      <Button
-                        variant="flat"
-                        size="sm"
-                        color="primary"
-                        isDisabled={isLocked}
-                        className="font-bold"
-                        onClick={() => setIsUnstakeDepositsOpen(true)}
-                      >
-                        Unstake
-                      </Button>
+                      UnstakeDepositsButton
                     )}
                     <Button
                       size="sm"
                       color="primary"
                       className="font-bold"
-                      onClick={() => setIsStakeMoreDepositsOpen(true)}
+                      onClick={handleStakeMoreDepositsOpen}
                     >
                       Stake
                     </Button>
@@ -247,6 +269,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
       <StakeMore
         isOpen={isStakeMoreOpen}
         onClose={handleCloseStakeMore}
+        onOk={handleOkStakeMore}
         collator={collator}
         collatorList={collatorList}
       />
@@ -255,19 +278,21 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
         onClose={handleCloseUnstake}
         symbol={symbol}
         totalAmount={formattedStakedRING}
-        refreshAmount={refetch}
+        onOk={handleOkUnstake}
         collator={collator}
         collatorList={collatorList}
       />
       <StakeMoreDeposits
         isOpen={isStakeMoreDepositsOpen}
         onClose={handleCloseStakeMoreDeposits}
+        onOk={handleOkStakeMoreDeposits}
         collators={collatorList}
         targetCollator={collator}
       />
       <UnstakeDeposits
         isOpen={isUnstakeDepositsOpen}
         onClose={handleCloseUnstakeDeposits}
+        onOk={handleOkUnstakeDeposits}
         symbol={symbol}
         deposits={stakedDeposits}
         collators={collatorList}

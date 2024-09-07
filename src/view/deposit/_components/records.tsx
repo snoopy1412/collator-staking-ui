@@ -39,7 +39,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
   const { currentChain, ktonInfo } = useWalletStatus();
   const [currentTokenId, setCurrentTokenId] = useState<bigint>();
   const [withdrawEarlierOpen, setWithdrawEarlierOpen] = useState<boolean>(false);
-  const [withdrawHash, setWithdrawHash] = useState<`0x${string}` | null>(null);
+  const [withdrawHash, setWithdrawHash] = useState<`0x${string}` | undefined>(undefined);
   const {
     depositList,
     isLoading: isDepositListLoading,
@@ -90,7 +90,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
   );
 
   const handleCloseWithdrawEarlier = useCallback(() => {
-    setWithdrawHash(null);
+    setWithdrawHash(undefined);
     setCurrentTokenId(undefined);
     setWithdrawEarlierOpen(false);
   }, []);
@@ -100,7 +100,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
       deleteDepositInfoByTokenId(currentTokenId);
       onRefreshRingBalance?.();
     }
-    setWithdrawHash(null);
+    setWithdrawHash(undefined);
     setWithdrawEarlierOpen(false);
     handleCloseWithdrawEarlier();
   }, [
@@ -111,7 +111,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
   ]);
 
   const handleWithdrawFail = useCallback(() => {
-    setWithdrawHash(null);
+    setWithdrawHash(undefined);
   }, []);
 
   const handleWithdrawSuccess = useCallback(() => {
@@ -248,14 +248,12 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
         onClose={handleCloseWithdrawEarlier}
         onSuccess={handleWithdrawEarlierSuccess}
       />
-      {withdrawHash && (
-        <TransactionStatus
-          hash={withdrawHash}
-          title="Withdraw"
-          onSuccess={handleWithdrawSuccess}
-          onFail={handleWithdrawFail}
-        />
-      )}
+      <TransactionStatus
+        hash={withdrawHash}
+        title="Withdraw"
+        onSuccess={handleWithdrawSuccess}
+        onFail={handleWithdrawFail}
+      />
     </>
   );
 };

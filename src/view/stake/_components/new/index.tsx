@@ -62,7 +62,6 @@ const NewStakeModal = ({
   const [checkedDeposits, setCheckedDeposits] = useState<DepositInfo[]>([]);
 
   const { data: isApprovedForAll, isLoading: isLoadingIsApprovedForAll } = useIsApprovedForAll();
-  console.log('isApprovedForAll', isApprovedForAll);
 
   const selectedAddress = useMemo(() => {
     return Array.from(selection)[0] as `0x${string}`;
@@ -304,23 +303,19 @@ const NewStakeModal = ({
         selection={selection}
         onSelectionChange={handleSelectionChange}
       />
-      {approvalHash && (
-        <TransactionStatus
-          hash={approvalHash}
-          title="Approval"
-          onSuccess={handleDepositStakeStart}
-          onFail={handleTransactionFail}
-          isLoading={isPendingDepositStake}
-        />
-      )}
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          title="Staking"
-          onSuccess={handleTransactionSuccess}
-          onFail={handleTransactionFail}
-        />
-      )}
+      <TransactionStatus
+        hash={approvalHash}
+        title="Approval"
+        onSuccess={handleDepositStakeStart}
+        onFail={handleTransactionFail}
+        isLoading={isPendingDepositStake}
+      />
+      <TransactionStatus
+        hash={hash}
+        title="Staking"
+        onSuccess={handleTransactionSuccess}
+        onFail={handleTransactionFail}
+      />
     </>
   );
 };

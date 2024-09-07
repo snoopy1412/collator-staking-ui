@@ -221,30 +221,24 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
         Stop Collation
       </Button>
       <StopCollation isOpen={open} onClose={() => setOpen(false)} />
-      {sessionKeyHash && (
-        <TransactionStatus
-          hash={sessionKeyHash as `0x${string}`}
-          onSuccess={handleSetSessionKeySuccess}
-          onFail={handleSetSessionKeyError}
-          title="Set Session Key"
-        />
-      )}
-      {commissionHash && (
-        <TransactionStatus
-          hash={commissionHash as `0x${string}`}
-          onSuccess={handleSetCommissionSuccess}
-          onFail={handleSetCommissionError}
-          title="Set Commission"
-        />
-      )}
-      {stopHash && (
-        <TransactionStatus
-          hash={stopHash as `0x${string}`}
-          onSuccess={handleStopSuccess}
-          onFail={handleStopError}
-          title="Stop Collation"
-        />
-      )}
+      <TransactionStatus
+        hash={sessionKeyHash as `0x${string}`}
+        onSuccess={handleSetSessionKeySuccess}
+        onFail={handleSetSessionKeyError}
+        title="Set Session Key"
+      />
+      <TransactionStatus
+        hash={commissionHash as `0x${string}`}
+        onSuccess={handleSetCommissionSuccess}
+        onFail={handleSetCommissionError}
+        title="Set Commission"
+      />
+      <TransactionStatus
+        hash={stopHash as `0x${string}`}
+        onSuccess={handleStopSuccess}
+        onFail={handleStopError}
+        title="Stop Collation"
+      />
     </div>
   );
 };

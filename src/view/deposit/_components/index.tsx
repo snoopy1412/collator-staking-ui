@@ -125,9 +125,7 @@ const Deposit = () => {
         onClose={() => setIsOpen(false)}
         onRefreshRingBalance={refetchBalance}
       />
-      {hash && (
-        <TransactionStatus hash={hash} title="Deposit" onSuccess={handleCloseTransactionStatus} />
-      )}
+      <TransactionStatus hash={hash} title="Deposit" onSuccess={handleCloseTransactionStatus} />
     </>
   );
 };

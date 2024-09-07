@@ -6,15 +6,9 @@ import { Skeleton } from '@nextui-org/react';
 
 const ReservedStakingPanel = () => {
   const { address, currentChainId } = useWalletStatus();
-  const { data, isLoading } = useStakingAccount({
-    where: {
-      account: {
-        _eq: address
-      },
-      chainId: {
-        _eq: currentChainId
-      }
-    }
+  const { data, isLoading, isRefetching } = useStakingAccount({
+    address,
+    currentChainId
   });
   const totalAmount =
     data?.reduce((acc, item) => acc + (item.assets ? BigInt(item.assets) : 0n), 0n) ?? 0n;
@@ -26,8 +20,8 @@ const ReservedStakingPanel = () => {
         <img src="/images/token/ring.svg" alt="ring" className="h-[60px] w-[60px]" />
       </div>
       <p className="m-0 text-[0.875rem] font-normal text-foreground">Reserved in Staking</p>
-      {isLoading ? (
-        <Skeleton className="h-[2rem] w-full max-w-[10rem] rounded-medium" />
+      {isLoading || isRefetching ? (
+        <Skeleton className="h-[2.25rem] w-full max-w-[10rem] flex-shrink-0 rounded-medium" />
       ) : (
         <TooltipFormattedNumber value={formattedTotalAmount} />
       )}

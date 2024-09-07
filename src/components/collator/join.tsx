@@ -201,22 +201,18 @@ const JoinCollator = ({
         >
           {hasPool ? 'Collate' : 'Create Nomination Pool & Collate'}
         </Button>
-        {sessionKeyHash && (
-          <TransactionStatus
-            hash={sessionKeyHash as `0x${string}`}
-            onSuccess={handleSetSessionKeySuccess}
-            onFail={handleSetSessionKeyError}
-            title="Set Session Key"
-          />
-        )}
-        {commissionHash && (
-          <TransactionStatus
-            hash={commissionHash as `0x${string}`}
-            onSuccess={handleSetCommissionSuccess}
-            onFail={handleSetCommissionError}
-            title="Set Commission"
-          />
-        )}
+        <TransactionStatus
+          hash={sessionKeyHash as `0x${string}`}
+          onSuccess={handleSetSessionKeySuccess}
+          onFail={handleSetSessionKeyError}
+          title="Set Session Key"
+        />
+        <TransactionStatus
+          hash={commissionHash as `0x${string}`}
+          onSuccess={handleSetCommissionSuccess}
+          onFail={handleSetCommissionError}
+          title="Set Commission"
+        />
       </div>
     </div>
   );

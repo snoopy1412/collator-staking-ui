@@ -32,8 +32,6 @@ export const useStakedDepositsOf = ({ account }: StakedDepositsOfProps) => {
     }
   });
 
-  console.log('stakedDepositsOf', stakedDepositsOf);
-
   const {
     data: combinedInfo,
     isLoading: isCombinedInfoLoading,
@@ -125,6 +123,7 @@ export const useStaked = ({ collator }: StakedProps) => {
   const {
     data,
     isLoading,
+    isRefetching,
     refetch: refetchStaked
   } = useReadContracts({
     contracts: [
@@ -151,7 +150,7 @@ export const useStaked = ({ collator }: StakedProps) => {
     stakedRING: data?.[0]?.result as bigint,
     stakingLocks: data?.[1]?.result as bigint,
     stakedDeposits: filteredStakedDeposits,
-    isLoading: isStakedDepositsLoading || isLoading,
+    isLoading: isStakedDepositsLoading || isLoading || isRefetching,
     refetch
   };
 };

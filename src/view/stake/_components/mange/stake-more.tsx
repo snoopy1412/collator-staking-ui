@@ -13,9 +13,10 @@ interface StakeMoreProps {
   collator: `0x${string}`;
   collatorList: CollatorSet[];
   onClose: () => void;
+  onOk: () => void;
 }
 
-const StakeMore = ({ isOpen, onClose, collator, collatorList }: StakeMoreProps) => {
+const StakeMore = ({ isOpen, onClose, collator, collatorList, onOk }: StakeMoreProps) => {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [amount, setAmount] = useState<string | undefined>('0');
 
@@ -45,8 +46,8 @@ const StakeMore = ({ isOpen, onClose, collator, collatorList }: StakeMoreProps) 
   const handleSuccess = useCallback(() => {
     setHash(undefined);
     refetchBalance();
-    onClose();
-  }, [onClose, refetchBalance]);
+    onOk?.();
+  }, [onOk, refetchBalance]);
 
   return (
     <>
@@ -91,14 +92,7 @@ const StakeMore = ({ isOpen, onClose, collator, collatorList }: StakeMoreProps) 
         </ModalContent>
       </Modal>
 
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          onFail={handleFail}
-          onSuccess={handleSuccess}
-          title="Stake"
-        />
-      )}
+      <TransactionStatus hash={hash} onFail={handleFail} onSuccess={handleSuccess} title="Stake" />
     </>
   );
 };

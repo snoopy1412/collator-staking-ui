@@ -7,8 +7,8 @@ import TransactionSuccess from './success';
 import TransactionFail from './fail';
 
 interface TransactionStatusProps {
-  hash: `0x${string}`;
   title: string;
+  hash?: `0x${string}`;
   onSuccess?: () => void;
   onFail?: () => void;
   isLoading?: boolean;
@@ -44,7 +44,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
   }, [isLoadingProps, isSuccess, isError, title, onSuccess, onFail, isLoading]);
 
   return (
-    <Modal isOpen hideCloseButton placement="center" className="bg-background">
+    <Modal isOpen={!!hash} hideCloseButton placement="center" className="bg-background">
       <ModalContent className="h-[calc(100vw-1.24rem)] max-h-[28rem] w-[calc(100vw-1.24rem)] p-0 md:h-[25rem] md:w-[25rem]">
         <ModalBody className="flex h-full w-full flex-col items-center justify-center p-5">
           {renderContent}

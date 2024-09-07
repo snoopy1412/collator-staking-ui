@@ -11,23 +11,24 @@ import { CollatorSet } from '@/service/type';
 
 interface EditStakeProps {
   isOpen: boolean;
-  onClose: () => void;
   collators: CollatorSet[];
   targetCollator: `0x${string}`;
   symbol: string;
   deposits: StakedDepositInfo[];
+  onClose: () => void;
+  onOk: () => void;
 }
 
 const UnstakeDeposits = ({
   isOpen,
-  onClose,
   collators,
   targetCollator,
-  deposits
+  deposits,
+  onClose,
+  onOk
 }: EditStakeProps) => {
   const depositListRef = useRef<DepositListRef>(null);
   const [checkedDeposits, setCheckedDeposits] = useState<StakedDepositInfo[]>([]);
-  console.log('checkedDeposits', checkedDeposits);
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
 
   const { unstakeDeposits, isLoadingOldAndNewPrev, isPending } = useUnstakeDeposits({
@@ -45,8 +46,8 @@ const UnstakeDeposits = ({
 
   const handleSuccess = useCallback(() => {
     setHash(undefined);
-    onClose();
-  }, [onClose]);
+    onOk?.();
+  }, [onOk]);
 
   const handleFail = useCallback(() => {
     setHash(undefined);
@@ -90,14 +91,12 @@ const UnstakeDeposits = ({
         </ModalContent>
       </Modal>
 
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          onFail={handleFail}
-          onSuccess={handleSuccess}
-          title="Unstake"
-        />
-      )}
+      <TransactionStatus
+        hash={hash}
+        onFail={handleFail}
+        onSuccess={handleSuccess}
+        title="Unstake"
+      />
     </>
   );
 };

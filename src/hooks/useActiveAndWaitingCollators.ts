@@ -24,6 +24,9 @@ export function useActiveAndWaitingCollators(): UseActiveAndWaitingCollatorsResu
     where: {
       chainId: {
         _eq: currentChainId
+      },
+      inset: {
+        _eq: 1
       }
     },
     orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]

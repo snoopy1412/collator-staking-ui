@@ -20,8 +20,10 @@ interface WithdrawEarlierProps {
   symbol: string;
 }
 const WithdrawEarlier = ({ tokenId, isOpen, onClose, symbol, onSuccess }: WithdrawEarlierProps) => {
-  const [withdrawEarlierHash, setWithdrawEarlierHash] = useState<`0x${string}` | null>(null);
-  const [approveHash, setApproveHash] = useState<`0x${string}` | null>(null);
+  const [withdrawEarlierHash, setWithdrawEarlierHash] = useState<`0x${string}` | undefined>(
+    undefined
+  );
+  const [approveHash, setApproveHash] = useState<`0x${string}` | undefined>(undefined);
   const { withdrawEarlier, isPending: isWithdrawEarlierPending } = useWithdrawEarlier();
   const { data: ktonValue, isLoading: isKtonBalanceLoading } = useKtonBalance();
   const { address, ktonInfo } = useWalletStatus();
@@ -106,22 +108,22 @@ const WithdrawEarlier = ({ tokenId, isOpen, onClose, symbol, onSuccess }: Withdr
   };
 
   const handleApproveSuccess = useCallback(() => {
-    setApproveHash(null);
+    setApproveHash(undefined);
     updateAllowance(penalty);
   }, [penalty, updateAllowance]);
 
   const handleSuccess = useCallback(() => {
-    setWithdrawEarlierHash(null);
+    setWithdrawEarlierHash(undefined);
     onSuccess();
   }, [onSuccess]);
 
   const handleFail = useCallback(() => {
-    setWithdrawEarlierHash(null);
+    setWithdrawEarlierHash(undefined);
   }, []);
 
   useEffect(() => {
     if (!tokenId) {
-      setWithdrawEarlierHash(null);
+      setWithdrawEarlierHash(undefined);
     }
   }, [tokenId]);
 
@@ -168,17 +170,13 @@ const WithdrawEarlier = ({ tokenId, isOpen, onClose, symbol, onSuccess }: Withdr
         </ModalContent>
       </Modal>
 
-      {withdrawEarlierHash && (
-        <TransactionStatus
-          hash={withdrawEarlierHash}
-          title="Withdraw"
-          onSuccess={handleSuccess}
-          onFail={handleFail}
-        />
-      )}
-      {approveHash && (
-        <TransactionStatus hash={approveHash} title="Approve" onSuccess={handleApproveSuccess} />
-      )}
+      <TransactionStatus
+        hash={withdrawEarlierHash}
+        title="Withdraw"
+        onSuccess={handleSuccess}
+        onFail={handleFail}
+      />
+      <TransactionStatus hash={approveHash} title="Approve" onSuccess={handleApproveSuccess} />
     </>
   );
 };

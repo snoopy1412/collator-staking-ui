@@ -10,12 +10,19 @@ import TransactionStatus from '@/components/transaction-status';
 
 interface EditStakeProps {
   isOpen: boolean;
-  onClose: () => void;
   collators: CollatorSet[];
   targetCollator: `0x${string}`;
+  onClose: () => void;
+  onOk: () => void;
 }
 
-const StakeMoreDeposits = ({ isOpen, onClose, collators, targetCollator }: EditStakeProps) => {
+const StakeMoreDeposits = ({
+  isOpen,
+  collators,
+  targetCollator,
+  onClose,
+  onOk
+}: EditStakeProps) => {
   const depositListRef = useRef<DepositListRef>(null);
   const [checkedDeposits, setCheckedDeposits] = useState<DepositInfo[]>([]);
 
@@ -40,8 +47,8 @@ const StakeMoreDeposits = ({ isOpen, onClose, collators, targetCollator }: EditS
 
   const handleSuccess = useCallback(() => {
     setHash(undefined);
-    onClose();
-  }, [onClose]);
+    onOk?.();
+  }, [onOk]);
 
   const handleFail = useCallback(() => {
     setHash(undefined);
@@ -80,14 +87,7 @@ const StakeMoreDeposits = ({ isOpen, onClose, collators, targetCollator }: EditS
           </ModalBody>
         </ModalContent>
       </Modal>
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          onFail={handleFail}
-          onSuccess={handleSuccess}
-          title="Stake"
-        />
-      )}
+      <TransactionStatus hash={hash} onFail={handleFail} onSuccess={handleSuccess} title="Stake" />
     </>
   );
 };

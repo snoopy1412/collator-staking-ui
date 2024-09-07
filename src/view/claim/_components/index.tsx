@@ -80,14 +80,7 @@ const Claim = () => {
         isLoading={isStakingAccountLoading || isCollatorSetLoading}
         onClick={handleClick}
       />
-      {hash && (
-        <TransactionStatus
-          hash={hash}
-          title="Claim"
-          onSuccess={handleSuccess}
-          onFail={handleError}
-        />
-      )}
+      <TransactionStatus hash={hash} title="Claim" onSuccess={handleSuccess} onFail={handleError} />
     </>
   );
 };
