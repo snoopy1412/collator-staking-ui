@@ -85,14 +85,10 @@ export interface CollatorSetOrderBy {
 export interface CollatorSet {
   address: string;
   assets?: string;
-  blockNumber: string;
-  blockTimestamp: string;
   chainId: string;
   commission?: string;
-  db_write_timestamp?: string;
   id: string;
   inset?: number;
-  logIndex: number;
   pool?: string;
   prev?: string;
   seq?: number;

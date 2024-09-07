@@ -17,14 +17,10 @@ export const GET_COLLATOR_SET = gql`
     ) {
       address
       assets
-      blockNumber
-      blockTimestamp
       chainId
       commission
-      db_write_timestamp
       id
       inset
-      logIndex
       pool
       prev
       seq
