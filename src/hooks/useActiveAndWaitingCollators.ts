@@ -29,8 +29,6 @@ export function useActiveAndWaitingCollators(): UseActiveAndWaitingCollatorsResu
     orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]
   });
 
-  console.log('collators111', collators);
-
   const {
     data: activeCollatorCount,
     isLoading: isContractCollatorsLoading,

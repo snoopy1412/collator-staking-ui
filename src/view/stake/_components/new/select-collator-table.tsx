@@ -93,6 +93,7 @@ const SelectCollatorTable = ({
         removeWrapper
         classNames={{
           base: cn(isLoading ? '' : 'min-w-[100%] overflow-x-auto'),
+          tbody: 'max-h-[50vh] overflow-y-auto',
           td: 'text-foreground'
         }}
         layout="fixed"

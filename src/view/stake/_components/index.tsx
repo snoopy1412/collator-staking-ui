@@ -26,14 +26,10 @@ const StakePage = () => {
     waitingCollators
   });
 
-  console.log('stakingAccount', stakingAccount);
-
   const [isNewStakeOpen, setIsNewStakeOpen] = useState(false);
   const [isEditStakeOpen, setIsEditStakeOpen] = useState(false);
 
   const handleCloseNewStake = useCallback(() => {
-    console.log('1111111111111111111');
-
     setIsNewStakeOpen(false);
   }, []);
 
@@ -47,13 +43,7 @@ const StakePage = () => {
   }, []);
 
   return (
-    <Suspense
-      fallback={
-        <div>
-          LoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoadingLoading...
-        </div>
-      }
-    >
+    <Suspense fallback={<div>Loading...</div>}>
       <div className="flex flex-col gap-[1.25rem]">
         <StakeList
           data={stakingAccount}

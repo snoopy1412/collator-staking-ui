@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, Tab, Tabs } from '@nextui-org/react';
+import { useCallback, useMemo, useState } from 'react';
+import { Modal, ModalContent, ModalHeader, ModalBody, Tab, Tabs, Spinner } from '@nextui-org/react';
 import { X } from 'lucide-react';
 
 import { collatorTabs } from '@/config/tabs';
@@ -8,8 +8,10 @@ import { TransitionPanel } from '../transition-panel';
 
 import JoinCollator from './join';
 import ManageCollator from './manage';
-
-import type { Key } from 'react';
+import { Key } from '@/types/ui';
+import usePreview from './_hooks/preview';
+import OverviewCollator from './overview';
+import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
 
 interface CollatorTabsProps {
   onClose: () => void;
@@ -17,6 +19,33 @@ interface CollatorTabsProps {
 }
 const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
   const [selected, setSelected] = useState<Key>(collatorTabs[0].key);
+
+  const {
+    collators,
+    isLoading: isCollatorSetLoading,
+    refetch: refetchCollators
+  } = useActiveAndWaitingCollators();
+  const {
+    hasSessionKey,
+    sessionKey,
+    commissionOf,
+    hasPool,
+    isRegisteredCollator,
+    isLoading,
+    refetch: refetchPreview
+  } = usePreview();
+
+  const refetch = useCallback(() => {
+    refetchPreview();
+    refetchCollators();
+  }, [refetchPreview, refetchCollators]);
+
+  const tabs = useMemo(() => {
+    if (isRegisteredCollator) {
+      return collatorTabs?.filter((tab) => tab.key !== 'join');
+    }
+    return collatorTabs?.filter((tab) => tab.key !== 'overview');
+  }, [isRegisteredCollator]);
 
   return (
     <>
@@ -37,7 +66,12 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
             <span>Collator</span>
           </ModalHeader>
 
-          <ModalBody className="flex flex-col gap-[1.25rem] p-0 px-5 pb-5">
+          <ModalBody className="relative flex flex-col gap-[1.25rem] p-0 px-5 pb-5">
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                <Spinner />
+              </div>
+            )}
             {/* todo  */}
             {/* Animation is not working when tabs are used inside a modal. */}
             {/* https://github.com/nextui-org/nextui/issues/2297 */}
@@ -56,9 +90,10 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
                 tabContent: 'group-data-[selected=true]:text-foreground  font-bold'
               }}
             >
-              {collatorTabs.map((tab) => (
+              {tabs.map((tab) => (
                 <Tab
                   key={tab.key}
+                  isDisabled={!isRegisteredCollator && tab.key === 'manage'}
                   title={
                     <div className="flex items-center space-x-2">
                       <span>{tab.label}</span>
@@ -68,7 +103,7 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
               ))}
             </Tabs>
             <TransitionPanel
-              activeIndex={selected === 'join' ? 0 : 1}
+              activeIndex={selected === 'join' ? 0 : selected === 'overview' ? 1 : 2}
               transition={{ duration: 0.2, ease: 'easeInOut' }}
               variants={{
                 enter: { opacity: 0, filter: 'blur(4px)' },
@@ -76,8 +111,26 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
                 exit: { opacity: 0, filter: 'blur(4px)' }
               }}
             >
-              {selected === 'join' && <JoinCollator />}
-              {selected === 'manage' && <ManageCollator />}
+              {selected === 'join' && (
+                <JoinCollator
+                  hasSessionKey={hasSessionKey}
+                  sessionKey={sessionKey}
+                  hasPool={hasPool}
+                  collators={collators}
+                  refetch={refetch}
+                />
+              )}
+              {selected === 'overview' && (
+                <OverviewCollator sessionKey={sessionKey} commissionOf={commissionOf} />
+              )}
+              {selected === 'manage' && (
+                <ManageCollator
+                  sessionKey={sessionKey}
+                  commissionOf={commissionOf}
+                  collators={collators}
+                  refetch={refetch}
+                />
+              )}
             </TransitionPanel>
           </ModalBody>
         </ModalContent>

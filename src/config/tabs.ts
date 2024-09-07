@@ -41,6 +41,10 @@ export const collatorTabs = [
     key: 'join'
   },
   {
+    label: 'Overview',
+    key: 'overview'
+  },
+  {
     label: 'Manage',
     key: 'manage'
   }
