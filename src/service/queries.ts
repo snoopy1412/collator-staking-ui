@@ -29,6 +29,7 @@ export const GET_COLLATOR_SET = gql`
       prev
       seq
       votes
+      reward
     }
   }
 `;

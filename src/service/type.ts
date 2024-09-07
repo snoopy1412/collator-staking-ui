@@ -97,6 +97,7 @@ export interface CollatorSet {
   prev?: string;
   seq?: number;
   votes?: string;
+  reward?: string;
 }
 
 export interface CollatorSetQueryParams {
@@ -171,65 +172,4 @@ export interface StakingAccountQueryParams {
   offset?: number;
   order_by?: StakingAccountOrderBy[];
   where?: StakingAccountBoolExp;
-}
-
-export type StakingAccountQueryFunction = (
-  params: StakingAccountQueryParams
-) => Promise<StakingAccount[]>;
-
-export enum StakingCollatorSelectColumn {
-  Assets = 'assets',
-  ChainId = 'chainId',
-  Collator = 'collator',
-  DbWriteTimestamp = 'db_write_timestamp',
-  Id = 'id',
-  Pool = 'pool'
-}
-
-export interface StakingCollatorOrderBy {
-  assets?: OrderByDirection;
-  chainId?: OrderByDirection;
-  collator?: OrderByDirection;
-  db_write_timestamp?: OrderByDirection;
-  id?: OrderByDirection;
-  pool?: OrderByDirection;
-}
-
-export interface StakingCollatorBoolExp {
-  _and?: StakingCollatorBoolExp[];
-  _not?: StakingCollatorBoolExp;
-  _or?: StakingCollatorBoolExp[];
-  assets?: NumericComparisonExp;
-  chainId?: NumericComparisonExp;
-  collator?: StringComparisonExp;
-  db_write_timestamp?: TimestampComparisonExp;
-  id?: StringComparisonExp;
-  pool?: StringComparisonExp;
-}
-
-export enum StakingNominationSelectColumn {
-  Assets = 'assets',
-  ChainId = 'chainId',
-  DbWriteTimestamp = 'db_write_timestamp',
-  Id = 'id',
-  Pool = 'pool'
-}
-
-export interface StakingNominationOrderBy {
-  assets?: OrderByDirection;
-  chainId?: OrderByDirection;
-  db_write_timestamp?: OrderByDirection;
-  id?: OrderByDirection;
-  pool?: OrderByDirection;
-}
-
-export interface StakingNominationBoolExp {
-  _and?: StakingNominationBoolExp[];
-  _not?: StakingNominationBoolExp;
-  _or?: StakingNominationBoolExp[];
-  assets?: NumericComparisonExp;
-  chainId?: NumericComparisonExp;
-  db_write_timestamp?: TimestampComparisonExp;
-  id?: StringComparisonExp;
-  pool?: StringComparisonExp;
 }

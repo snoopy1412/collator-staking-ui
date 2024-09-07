@@ -15,6 +15,8 @@ import { SearchIcon } from 'lucide-react';
 import AddressCard from '@/components/address-card';
 import type { CollatorSet } from '@/service/type';
 import type { SelectionKeys } from '@/types/ui';
+import { formatEther } from 'viem';
+import FormattedNumberTooltip from '@/components/formatted-number-tooltip';
 
 interface SelectCollatorTableProps {
   symbol: string;
@@ -56,12 +58,24 @@ const SelectCollatorTable = ({
     switch (columnKey) {
       case 'collator':
         return <AddressCard address={item.address as `0x${string}`} />;
-      case 'balance':
-        return item.assets;
+      case 'balance': {
+        const formattedBalance = formatEther(item.assets ? BigInt(item.assets) : 0n);
+        return (
+          <FormattedNumberTooltip value={formattedBalance}>
+            {(formattedValue) => <span className="line-clamp-1">{formattedValue}</span>}
+          </FormattedNumberTooltip>
+        );
+      }
       case 'commission':
         return cellValue ? `${cellValue}%` : '-';
-      case 'session':
-        return '34';
+      case 'session': {
+        const formattedReward = formatEther(item.reward ? BigInt(item.reward) : 0n);
+        return (
+          <FormattedNumberTooltip value={formattedReward}>
+            {(formattedValue) => <span className="line-clamp-1">{formattedValue}</span>}
+          </FormattedNumberTooltip>
+        );
+      }
       default:
         return null;
     }
@@ -84,6 +98,7 @@ const SelectCollatorTable = ({
         onValueChange={handleSearchChange}
       />
       <Table
+        isHeaderSticky
         aria-label="Select collator table"
         color="primary"
         selectionMode="single"
@@ -92,8 +107,7 @@ const SelectCollatorTable = ({
         onSelectionChange={onSelectionChange}
         removeWrapper
         classNames={{
-          base: cn(isLoading ? '' : 'min-w-[100%] overflow-x-auto'),
-          tbody: 'max-h-[50vh] overflow-y-auto',
+          base: cn(isLoading ? '' : 'min-w-[100%] overflow-auto max-h-[50vh]'),
           td: 'text-foreground'
         }}
         layout="fixed"
