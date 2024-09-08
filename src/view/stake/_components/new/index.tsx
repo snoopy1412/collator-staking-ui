@@ -8,9 +8,11 @@ import {
   cn,
   Tab,
   Tabs,
-  Divider
+  Divider,
+  Spinner
 } from '@nextui-org/react';
 import { ChevronDown, X } from 'lucide-react';
+import { parseEther } from 'viem';
 
 import { TransitionPanel } from '@/components/transition-panel';
 import TransactionStatus from '@/components/transaction-status';
@@ -20,39 +22,29 @@ import StakeRing, { StakeRingRef } from './stake-ring';
 import StakeDeposit from './stake-deposit';
 import SelectCollator from './select-collator';
 
-import type { Key, SelectionKeys } from '@/types/ui';
-import type { CollatorSet } from '@/service/type';
 import Avatar from '@/components/avatar';
 import { toShortAddress } from '@/utils';
+import { DepositInfo } from '@/hooks/useUserDepositDetails';
+import type { DepositListRef } from '@/components/deposit-list';
+import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
 import {
   useIsApprovedForAll,
   useApprovalForAll,
   useDepositStake,
   useRingStake
 } from '../../_hooks/stake';
-import { parseEther } from 'viem';
-import { DepositInfo } from '@/hooks/useUserDepositDetails';
-import type { DepositListRef } from '@/components/deposit-list';
+
+import type { Key, SelectionKeys } from '@/types/ui';
 
 interface NewStakeModalProps {
   onClose: () => void;
-  collators: CollatorSet[];
-  activeCollators: CollatorSet[];
-  waitingCollators: CollatorSet[];
-  isLoading: boolean;
+  onSuccess: () => void;
   isOpen?: boolean;
 }
-const NewStakeModal = ({
-  onClose,
-  isOpen,
-  collators,
-  activeCollators,
-  waitingCollators,
-  isLoading
-}: NewStakeModalProps) => {
+const NewStakeModal = ({ onClose, isOpen, onSuccess }: NewStakeModalProps) => {
   const stakeRingRef = useRef<StakeRingRef>(null);
   const depositListRef = useRef<DepositListRef>(null);
-
+  const [page, setPage] = useState(1);
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const [approvalHash, setApprovalHash] = useState<`0x${string}` | undefined>(undefined);
   const [amount, setAmount] = useState<string | undefined>('0');
@@ -61,11 +53,19 @@ const NewStakeModal = ({
   const [selectCollatorOpen, setSelectCollatorOpen] = useState(false);
   const [checkedDeposits, setCheckedDeposits] = useState<DepositInfo[]>([]);
 
-  const { data: isApprovedForAll, isLoading: isLoadingIsApprovedForAll } = useIsApprovedForAll();
-
   const selectedAddress = useMemo(() => {
     return Array.from(selection)[0] as `0x${string}`;
   }, [selection]);
+
+  const {
+    all: collators,
+    active: activeCollators,
+    waiting: waitingCollators,
+    isLoading: isCollatorSetLoading,
+    refetch: refetchCollators
+  } = useActiveAndWaitingCollators();
+
+  const { data: isApprovedForAll, isLoading: isLoadingIsApprovedForAll } = useIsApprovedForAll();
 
   const {
     handleStake: handleRingStake,
@@ -88,15 +88,19 @@ const NewStakeModal = ({
     targetCollator: selectedAddress,
     deposits: checkedDeposits
   });
+
   const handleAmountChange = useCallback((amount: string) => {
     setAmount(amount);
+  }, []);
+
+  const handleTabChange = useCallback((key: Key) => {
+    setSelected(key);
+    setPage(1);
   }, []);
 
   const handleSelectionChange = useCallback((selection: SelectionKeys) => {
     setSelection(selection);
     const arr = Array.from(selection);
-    console.log('arr', arr);
-
     if (arr.length !== 0) {
       setSelectCollatorOpen(false);
     }
@@ -135,7 +139,10 @@ const NewStakeModal = ({
       depositListRef.current?.resetAndRefetch();
     }
     setHash(undefined);
-  }, [selected]);
+    refetchCollators();
+    setPage(1);
+    onSuccess();
+  }, [selected, refetchCollators, onSuccess]);
 
   const handleTransactionFail = useCallback(() => {
     setHash(undefined);
@@ -175,10 +182,13 @@ const NewStakeModal = ({
   }, [selected, isApprovedForAll]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      refetchCollators();
+      setPage(1);
+    } else {
       setSelection(new Set());
     }
-  }, [isOpen]);
+  }, [isOpen, refetchCollators]);
 
   return (
     <>
@@ -218,10 +228,16 @@ const NewStakeModal = ({
                   </div>
                 ) : (
                   <div className="flex items-center gap-[0.62rem]">
-                    <div className="size-[1.625rem] rounded-full bg-[#c6c6c6]"></div>
-                    <div className="text-[0.875rem] font-bold text-foreground">
-                      Select a collator
-                    </div>
+                    {isCollatorSetLoading ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <>
+                        <div className="size-[1.625rem] rounded-full bg-[#c6c6c6]"></div>
+                        <div className="text-[0.875rem] font-bold text-foreground">
+                          Select a collator
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -245,7 +261,7 @@ const NewStakeModal = ({
               variant="underlined"
               className="-mt-4"
               selectedKey={selected}
-              onSelectionChange={setSelected}
+              onSelectionChange={handleTabChange}
               classNames={{
                 tabList: 'gap-6 w-full relative rounded-none p-0 border-b border-divider',
                 cursor: 'w-full bg-foreground font-bold',
@@ -299,7 +315,9 @@ const NewStakeModal = ({
         onClose={handleClose}
         activeCollators={activeCollators}
         waitingCollators={waitingCollators}
-        isLoading={isLoading}
+        isLoading={isCollatorSetLoading}
+        page={page}
+        onChangePage={setPage}
         selection={selection}
         onSelectionChange={handleSelectionChange}
       />

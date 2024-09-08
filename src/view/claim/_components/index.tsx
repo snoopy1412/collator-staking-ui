@@ -1,38 +1,36 @@
 import { useCallback, useMemo, useState } from 'react';
-
-import ClaimList from './list';
+import { useReadContracts } from 'wagmi';
 import useStakingAccountWithStatus, {
   StakingAccountWithStatus
 } from '@/hooks/useStakingAccountWithStatus';
+import TransactionStatus from '@/components/transaction-status';
 import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
-import { useReadContracts } from 'wagmi';
 import { abi as rewardAbi } from '@/config/abi/reward';
 import { ClaimableReward } from './item';
 import useClaim from '../_hooks/cliam';
-import TransactionStatus from '@/components/transaction-status';
-
-export const dynamic = 'force-static';
+import ClaimList from './list';
 
 const Claim = () => {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
   const {
     activeCollators,
     waitingCollators,
-    isLoading: isCollatorSetLoading,
-    refetch: refetchCollatorSet
+    isLoading: isCollatorSetLoading
   } = useActiveAndWaitingCollators();
 
-  const {
-    data: stakingAccount,
-    isLoading: isStakingAccountLoading,
-    refetch: refetchStakingAccount
-  } = useStakingAccountWithStatus({
+  const { claim } = useClaim();
+
+  const { data: stakingAccount, isLoading: isStakingAccountLoading } = useStakingAccountWithStatus({
     activeCollators,
     waitingCollators
   });
 
-  // 计算 rewards
-  const { data: rewards } = useReadContracts({
+  const {
+    data: rewards,
+    refetch: refetchRewards,
+    isLoading: isRewardsLoading,
+    isRefetching: isRewardsRefetching
+  } = useReadContracts({
     contracts: stakingAccount?.map((item) => ({
       address: item?.pool as `0x${string}`,
       abi: rewardAbi,
@@ -44,12 +42,11 @@ const Claim = () => {
     }
   });
 
-  const { claim } = useClaim();
-
   const stakingAccountWithRewards = useMemo(() => {
     return stakingAccount?.map((item, index) => ({
       ...item,
-      reward: rewards?.[index]?.result as bigint
+      reward:
+        typeof rewards?.[index]?.result === 'undefined' ? 0n : (rewards?.[index]?.result as bigint)
     }));
   }, [stakingAccount, rewards]);
 
@@ -65,9 +62,8 @@ const Claim = () => {
 
   const handleSuccess = useCallback(() => {
     setHash(undefined);
-    refetchStakingAccount();
-    refetchCollatorSet();
-  }, [refetchStakingAccount, refetchCollatorSet]);
+    refetchRewards();
+  }, [refetchRewards]);
 
   const handleError = useCallback(() => {
     setHash(undefined);
@@ -78,6 +74,7 @@ const Claim = () => {
       <ClaimList
         data={stakingAccountWithRewards as ClaimableReward[]}
         isLoading={isStakingAccountLoading || isCollatorSetLoading}
+        rewardIsLoading={isRewardsLoading || isRewardsRefetching}
         onClick={handleClick}
       />
       <TransactionStatus hash={hash} title="Claim" onSuccess={handleSuccess} onFail={handleError} />

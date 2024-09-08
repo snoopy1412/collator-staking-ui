@@ -1,15 +1,18 @@
 import { useReadContract } from 'wagmi';
 import { address, abi } from '@/config/abi/palletHelper';
 
-const useContractCollators = () => {
+const useActiveCollatorCount = ({ enabled }: { enabled: boolean }) => {
   const result = useReadContract({
     address: address,
     abi: abi,
     functionName: 'getContractCollators',
-    args: []
+    args: [],
+    query: {
+      enabled
+    }
   });
 
   return result;
 };
 
-export default useContractCollators;
+export default useActiveCollatorCount;

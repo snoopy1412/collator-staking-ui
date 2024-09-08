@@ -1,37 +1,24 @@
 import { Suspense, useCallback, useState } from 'react';
 import { Button } from '@nextui-org/react';
-import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
-
+import useStakingAccountWithStatus from '@/hooks/useStakingAccountWithStatus';
+import useWalletStatus from '@/hooks/useWalletStatus';
 import StakeList from './list';
 import NewStake from './new';
 import MangeStake from './mange';
-import useStakingAccountWithStatus from '@/hooks/useStakingAccountWithStatus';
 
 import type { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';
-import useWalletStatus from '@/hooks/useWalletStatus';
 
 const StakePage = () => {
   const { currentChain } = useWalletStatus();
   const [current, setCurrent] = useState<StakingAccountWithStatus | null>(null);
-  const {
-    collators,
-    activeCollators,
-    waitingCollators,
-    isLoading: isCollatorSetLoading,
-    refetch
-  } = useActiveAndWaitingCollators();
+  const [isNewStakeOpen, setIsNewStakeOpen] = useState(false);
+  const [isEditStakeOpen, setIsEditStakeOpen] = useState(false);
 
   const {
     data: stakingAccount,
     isLoading: isStakingAccountLoading,
     refetch: refetchStakingAccount
-  } = useStakingAccountWithStatus({
-    activeCollators,
-    waitingCollators
-  });
-
-  const [isNewStakeOpen, setIsNewStakeOpen] = useState(false);
-  const [isEditStakeOpen, setIsEditStakeOpen] = useState(false);
+  } = useStakingAccountWithStatus();
 
   const handleCloseNewStake = useCallback(() => {
     setIsNewStakeOpen(false);
@@ -64,18 +51,15 @@ const StakePage = () => {
       <NewStake
         isOpen={isNewStakeOpen}
         onClose={handleCloseNewStake}
-        collators={collators}
-        activeCollators={activeCollators}
-        waitingCollators={waitingCollators}
-        isLoading={isCollatorSetLoading}
+        onSuccess={refetchStakingAccount}
       />
       {current?.collator && (
         <MangeStake
           isOpen={isEditStakeOpen}
-          onClose={handleCloseEditStake}
           symbol={currentChain?.nativeCurrency.symbol || ''}
           collator={current?.collator}
-          collatorList={collators}
+          onClose={handleCloseEditStake}
+          onSuccess={refetchStakingAccount}
         />
       )}
     </Suspense>

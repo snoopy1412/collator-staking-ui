@@ -1,11 +1,9 @@
 import { useCallback, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { ScrollShadow } from '@nextui-org/react';
-
+import { MAX_DOM_COUNT, MAX_ITEM_COUNT } from '@/config/site';
 import Empty from '@/components/empty';
 import StakeLoading from './loading';
-import { MAX_DOM_COUNT, MAX_ITEM_COUNT } from '@/config/site';
-
 import Item from './item';
 
 import type { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';

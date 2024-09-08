@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Button } from '@nextui-org/react';
+import { Button, Skeleton } from '@nextui-org/react';
 
 import Avatar from '@/components/avatar';
 import { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';
@@ -12,17 +12,28 @@ export interface ClaimableReward extends StakingAccountWithStatus {
 
 interface ClaimableRewardCardProps {
   reward: ClaimableReward;
+  rewardIsLoading: boolean;
   onClick: () => void;
   style?: React.CSSProperties;
 }
 
-function ClaimableRewardCard({ reward, onClick, style }: ClaimableRewardCardProps) {
+function ClaimableRewardCard({
+  reward,
+  rewardIsLoading,
+  onClick,
+  style
+}: ClaimableRewardCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = useCallback(async () => {
-    setIsLoading(true);
-    await onClick();
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      await onClick();
+      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
   }, [onClick]);
 
   const formattedBalance = formatNumericValue(
@@ -47,13 +58,20 @@ function ClaimableRewardCard({ reward, onClick, style }: ClaimableRewardCardProp
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[0.31rem]">
             <span className="text-[0.75rem] font-normal text-foreground">Rewards</span>
-            <span className="text-[0.875rem] font-bold text-primary">{formattedBalance.fixed}</span>
+            {rewardIsLoading ? (
+              <Skeleton className="h-[0.875rem] w-[0.875rem] rounded-medium" />
+            ) : (
+              <span className="text-[0.875rem] font-bold text-primary">
+                {formattedBalance.fixed}
+              </span>
+            )}
           </div>
           <Button
             isLoading={isLoading}
             size="sm"
             color="primary"
             className="font-bold"
+            isDisabled={reward?.reward === 0n}
             variant="flat"
             onClick={handleClick}
           >

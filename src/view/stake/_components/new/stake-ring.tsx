@@ -1,4 +1,4 @@
-import { useCallback, useState, memo, forwardRef, useImperativeHandle } from 'react';
+import { useCallback, useState, memo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Divider, Link } from '@nextui-org/react';
 
 import AmountInputWithBalance from '@/components/amount-input-with-balance';
@@ -36,6 +36,10 @@ const StakeRing = forwardRef<StakeRingRef, StakeRingProps>(({ className, onAmoun
     },
     [onAmountChange]
   );
+
+  useEffect(() => {
+    resetBalanceAndAmount();
+  }, [resetBalanceAndAmount]);
 
   return (
     <div className="flex w-full flex-col gap-5">

@@ -30,6 +30,27 @@ export const GET_COLLATOR_SET = gql`
   }
 `;
 
+export const GET_COLLATOR_SET_BY_INSET = gql`
+  query GetCollatorSetByAccount(
+    $distinctOn: [CollatorSet_select_column!]
+    $limit: Int
+    $offset: Int
+    $orderBy: [CollatorSet_order_by!]
+    $where: CollatorSet_bool_exp
+  ) {
+    CollatorSet(
+      distinct_on: $distinctOn
+      limit: $limit
+      offset: $offset
+      order_by: $orderBy
+      where: $where
+    ) {
+      address
+      inset
+    }
+  }
+`;
+
 // 根据 nomination-collator-account 维度查询 质押
 // TODO
 // 这里可以用这个语句来查询,

@@ -21,7 +21,7 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
   const [selected, setSelected] = useState<Key>(collatorTabs[0].key);
 
   const {
-    collators,
+    all: collators,
     isLoading: isCollatorSetLoading,
     refetch: refetchCollators
   } = useActiveAndWaitingCollators();
@@ -67,7 +67,7 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
           </ModalHeader>
 
           <ModalBody className="relative flex flex-col gap-[1.25rem] p-0 px-5 pb-5">
-            {isLoading && (
+            {(isLoading || isCollatorSetLoading) && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50">
                 <Spinner />
               </div>

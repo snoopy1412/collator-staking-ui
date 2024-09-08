@@ -5,6 +5,7 @@ import {
   ModalBody,
   ModalContent,
   ModalHeader,
+  Pagination,
   Spinner,
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import {
   TableRow
 } from '@nextui-org/react';
 import { X } from 'lucide-react';
-import { Key, useCallback, useState } from 'react';
+import { Key, useCallback, useEffect, useState } from 'react';
 
 import { useUserDepositDetails } from '@/hooks/useUserDepositDetails';
 import { formatEther } from 'viem';
@@ -29,6 +30,7 @@ import TransactionStatus from '@/components/transaction-status';
 import AsyncButton from '@/components/async-button';
 import { toast } from 'sonner';
 
+const PAGE_SIZE = 10;
 interface SelectCollatorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,6 +39,7 @@ interface SelectCollatorProps {
 
 const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps) => {
   const { currentChain, ktonInfo } = useWalletStatus();
+  const [page, setPage] = useState(1);
   const [currentTokenId, setCurrentTokenId] = useState<bigint>();
   const [withdrawEarlierOpen, setWithdrawEarlierOpen] = useState<boolean>(false);
   const [withdrawHash, setWithdrawHash] = useState<`0x${string}` | undefined>(undefined);
@@ -44,9 +47,9 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
     depositList,
     isLoading: isDepositListLoading,
     deleteDepositInfoByTokenId,
-    isRefetching
+    refetch: refetchDepositList
   } = useUserDepositDetails({
-    enabled: isOpen
+    enabled: false
   });
   const { withdraw } = useWithdraw();
 
@@ -173,6 +176,16 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
     },
     [currentChain?.nativeCurrency?.symbol, handleWithdrawEarlier, handleWithdraw]
   );
+  const totalPages = Math.ceil(depositList?.length / PAGE_SIZE);
+  const paginatedData = depositList?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    if (isOpen) {
+      refetchDepositList();
+    } else {
+      setPage(1);
+    }
+  }, [isOpen, refetchDepositList]);
 
   return (
     <>
@@ -205,6 +218,19 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
                 base: cn(isDepositListLoading ? '' : 'min-w-[100%] overflow-x-auto'),
                 td: 'text-foreground'
               }}
+              bottomContent={
+                depositList?.length ? (
+                  <div className="flex w-full justify-end">
+                    <Pagination
+                      showControls
+                      size="sm"
+                      page={page}
+                      total={totalPages}
+                      onChange={(newPage) => setPage(newPage)}
+                    />
+                  </div>
+                ) : null
+              }
               removeWrapper
             >
               <TableHeader>
@@ -219,7 +245,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
                 </TableColumn>
               </TableHeader>
               <TableBody
-                items={depositList || []}
+                items={paginatedData || []}
                 emptyContent={<div className="text-center">No active deposit records</div>}
                 className="relative"
                 loadingContent={
@@ -227,7 +253,7 @@ const Records = ({ isOpen, onClose, onRefreshRingBalance }: SelectCollatorProps)
                     <Spinner />
                   </div>
                 }
-                loadingState={isDepositListLoading || isRefetching ? 'loading' : 'idle'}
+                loadingState={isDepositListLoading ? 'loading' : 'idle'}
               >
                 {(item: DepositInfo) => (
                   <TableRow key={item?.tokenId}>

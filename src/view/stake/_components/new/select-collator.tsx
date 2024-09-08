@@ -5,6 +5,7 @@ import { selectCollatorTabs } from '@/config/tabs';
 import SelectCollatorTable from './select-collator-table';
 import type { CollatorSet } from '@/service/type';
 import type { Key, SelectionKeys } from '@/types/ui';
+import useWalletStatus from '@/hooks/useWalletStatus';
 
 interface SelectCollatorProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface SelectCollatorProps {
   activeCollators: CollatorSet[];
   waitingCollators: CollatorSet[];
   isLoading: boolean;
+  page: number;
+  onChangePage?: (page: number) => void;
 }
 
 const SelectCollator = ({
@@ -23,13 +26,24 @@ const SelectCollator = ({
   onSelectionChange,
   activeCollators,
   waitingCollators,
-  isLoading
+  isLoading,
+  page,
+  onChangePage
 }: SelectCollatorProps) => {
+  const { currentChain } = useWalletStatus();
   const [selected, setSelected] = useState<Key>(selectCollatorTabs[0].key);
   const [keyword, setKeyword] = useState('');
   const handleSearchChange = useCallback((keyword: string) => {
     setKeyword(keyword);
   }, []);
+
+  const handleTabChange = useCallback(
+    (key: Key) => {
+      setSelected(key);
+      onChangePage?.(1);
+    },
+    [onChangePage]
+  );
 
   const handleSelectionChange = useCallback(
     (selection: SelectionKeys) => {
@@ -79,7 +93,7 @@ const SelectCollator = ({
               color="primary"
               variant="underlined"
               selectedKey={selected}
-              onSelectionChange={setSelected}
+              onSelectionChange={handleTabChange}
               className="-mt-3"
               classNames={{
                 tabList: 'gap-6 w-full relative rounded-none p-0 border-b border-divider',
@@ -101,13 +115,15 @@ const SelectCollator = ({
             </Tabs>
 
             <SelectCollatorTable
-              symbol="RING"
+              symbol={currentChain?.nativeCurrency?.symbol || 'RING'}
               data={data}
+              page={page}
               selection={selection}
               isLoading={isLoading}
               keyword={keyword}
               onSearchChange={handleSearchChange}
               onSelectionChange={handleSelectionChange}
+              onChangePage={onChangePage}
             />
           </ModalBody>
         </ModalContent>

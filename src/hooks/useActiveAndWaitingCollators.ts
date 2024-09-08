@@ -1,15 +1,14 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useCollatorSet } from '@/hooks/useService';
-import useContractCollators from '@/hooks/useContractCollators';
+import useActiveCollatorCount from '@/hooks/useActiveCollatorCount';
 import useWalletStatus from '@/hooks/useWalletStatus';
 import type { CollatorSet } from '@/service/type';
 
 interface UseActiveAndWaitingCollatorsResult {
-  collators: CollatorSet[];
-  activeCollators: CollatorSet[];
-  waitingCollators: CollatorSet[];
+  all: CollatorSet[];
+  active: CollatorSet[];
+  waiting: CollatorSet[];
   isLoading: boolean;
-  error: Error | null;
   refetch: () => void;
 }
 
@@ -18,60 +17,67 @@ export function useActiveAndWaitingCollators(): UseActiveAndWaitingCollatorsResu
   const {
     data: collators,
     isLoading: isCollatorSetLoading,
+    isRefetching: isCollatorSetRefetching,
     error: collatorSetError,
     refetch: refetchCollatorSet
   } = useCollatorSet({
-    where: {
-      chainId: {
-        _eq: currentChainId
-      },
-      inset: {
-        _eq: 1
-      }
-    },
-    orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]
+    currentChainId,
+    enabled: false
   });
 
   const {
     data: activeCollatorCount,
     isLoading: isContractCollatorsLoading,
-    error: contractCollatorsError
-  } = useContractCollators();
+    isRefetching: isContractCollatorsRefetching,
+    error: contractCollatorsError,
+    refetch: refetchContractCollators
+  } = useActiveCollatorCount({
+    enabled: !!currentChainId && !!collators && !!collators?.length
+  });
+
+  const refetch = useCallback(() => {
+    refetchCollatorSet();
+    refetchContractCollators();
+  }, [refetchCollatorSet, refetchContractCollators]);
+
+  const isLoading = useMemo(() => {
+    return (
+      isCollatorSetLoading ||
+      isContractCollatorsLoading ||
+      isCollatorSetRefetching ||
+      isContractCollatorsRefetching
+    );
+  }, [
+    isCollatorSetLoading,
+    isContractCollatorsLoading,
+    isCollatorSetRefetching,
+    isContractCollatorsRefetching
+  ]);
 
   const result = useMemo(() => {
-    if (isCollatorSetLoading || isContractCollatorsLoading) {
-      return { activeCollators: [], waitingCollators: [], isLoading: true, error: null };
+    if (isLoading) {
+      return { active: [], waiting: [], all: [] };
     }
 
     if (collatorSetError || contractCollatorsError) {
-      return {
-        activeCollators: [],
-        waitingCollators: [],
-        isLoading: false,
-        error: collatorSetError || contractCollatorsError
-      };
+      return { active: [], waiting: [], all: [] };
     }
 
     const activeCount = activeCollatorCount ? Number(activeCollatorCount) : 0;
-    const allCollators = collators || [];
-
+    const allCollators = [...(collators || [])];
     const activeCollators = allCollators.slice(0, activeCount);
     const waitingCollators = allCollators.slice(activeCount);
 
     return {
-      activeCollators,
-      waitingCollators,
-      isLoading: false,
-      error: null
+      active: activeCollators,
+      waiting: waitingCollators,
+      all: allCollators
     };
-  }, [
-    collators,
-    activeCollatorCount,
-    isCollatorSetLoading,
-    isContractCollatorsLoading,
-    collatorSetError,
-    contractCollatorsError
-  ]);
+  }, [collators, activeCollatorCount, collatorSetError, contractCollatorsError, isLoading]);
 
-  return { ...result, refetch: refetchCollatorSet, collators: collators || [] };
+  return {
+    ...result,
+    isLoading,
+    refetch
+  };
 }

@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Modal, ModalBody, ModalContent } from '@nextui-org/modal';
 import { useWaitForTransactionReceipt } from 'wagmi';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import TransactionPending from './pending';
 import TransactionSuccess from './success';
@@ -41,17 +42,29 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
     if (isError) {
       return <TransactionFail onOk={onFail} title={title} />;
     }
+    return null;
   }, [isLoadingProps, isSuccess, isError, title, onSuccess, onFail, isLoading]);
 
   return (
     <Modal isOpen={!!hash} hideCloseButton placement="center" className="bg-background">
       <ModalContent className="h-[calc(100vw-1.24rem)] max-h-[28rem] w-[calc(100vw-1.24rem)] p-0 md:h-[25rem] md:w-[25rem]">
         <ModalBody className="flex h-full w-full flex-col items-center justify-center p-5">
-          {renderContent}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isLoadingProps ? 'loading' : isSuccess ? 'success' : 'error'}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              {renderContent}
+            </motion.div>
+          </AnimatePresence>
         </ModalBody>
       </ModalContent>
     </Modal>
   );
 };
 
-export default TransactionStatus;
+export default memo(TransactionStatus);

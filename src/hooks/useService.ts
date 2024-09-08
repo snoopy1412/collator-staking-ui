@@ -1,15 +1,45 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchCollatorSet, fetchStakingAccount } from '@/service/services';
+import { fetchCollatorSet, fetchCollatorSetByInset, fetchStakingAccount } from '@/service/services';
 import type { CollatorSetQueryParams, StakingAccountQueryParams } from '@/service/type';
 
-export function useCollatorSet(params: CollatorSetQueryParams = {}) {
+type CollatorSetParams = {
+  currentChainId?: number;
+  enabled?: boolean;
+};
+export function useCollatorSet({ currentChainId, enabled = true }: CollatorSetParams) {
+  const params: CollatorSetQueryParams = {
+    where: {
+      chainId: {
+        _eq: currentChainId
+      },
+      inset: {
+        _eq: 1
+      }
+    },
+    orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]
+  };
+
   return useQuery({
     queryKey: ['collatorSet', params],
     queryFn: async () => {
       const result = await fetchCollatorSet(params);
       if (result === null) {
         throw new Error('Failed to fetch collator set');
+      }
+      return result;
+    },
+    enabled: !!currentChainId && !!enabled
+  });
+}
+
+export function useCollatorSetByInset(params: CollatorSetQueryParams = {}) {
+  return useQuery({
+    queryKey: ['collatorSetByInset', params],
+    queryFn: async () => {
+      const result = await fetchCollatorSetByInset(params);
+      if (result === null) {
+        throw new Error('Failed to fetch collator set by inset');
       }
       return result;
     }

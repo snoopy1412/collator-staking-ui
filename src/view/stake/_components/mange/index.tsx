@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Button,
   Divider,
@@ -9,32 +9,37 @@ import {
   Spinner,
   Tooltip
 } from '@nextui-org/react';
+import { formatEther } from 'viem';
 import { X } from 'lucide-react';
-
 import AddressCard from '@/components/address-card';
-
+import FormattedNumberTooltip from '@/components/formatted-number-tooltip';
+import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
 import StakeMore from './stake-more';
 import Unstake from './unstake';
 import StakeMoreDeposits from './stake-more-deposits';
 import UnstakeDeposits from './unstake-deposts';
 import { useStaked } from '../../_hooks/staked';
-import { formatEther } from 'viem';
-import FormattedNumberTooltip from '@/components/formatted-number-tooltip';
-import { CollatorSet } from '@/service/type';
 
 interface ManageStakeeProps {
   isOpen: boolean;
-  onClose: () => void;
   symbol: string;
-  collatorList: CollatorSet[];
   collator: `0x${string}`;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: ManageStakeeProps) => {
+const ManageStake = ({ isOpen, symbol, collator, onClose, onSuccess }: ManageStakeeProps) => {
   const [isStakeMoreOpen, setIsStakeMoreOpen] = useState(false);
   const [isUnstakeOpen, setIsUnstakeOpen] = useState(false);
   const [isStakeMoreDepositsOpen, setIsStakeMoreDepositsOpen] = useState(false);
   const [isUnstakeDepositsOpen, setIsUnstakeDepositsOpen] = useState(false);
+
+  const {
+    all: collators,
+    isLoading: isCollatorSetLoading,
+    refetch: refetchCollators
+  } = useActiveAndWaitingCollators();
+
   const { stakedRING, stakingLocks, stakedDeposits, isLoading, refetch } = useStaked({
     collator
   });
@@ -51,10 +56,16 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
     return false;
   }, [stakingLocks]);
 
+  const handleSuccess = useCallback(() => {
+    refetch();
+    refetchCollators();
+    onSuccess();
+  }, [refetch, refetchCollators, onSuccess]);
+
   const handleOkStakeMore = useCallback(() => {
     setIsStakeMoreOpen(false);
-    refetch();
-  }, [refetch]);
+    handleSuccess();
+  }, [handleSuccess]);
 
   const handleCloseStakeMore = useCallback(() => {
     setIsStakeMoreOpen(false);
@@ -62,8 +73,8 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
 
   const handleOkUnstake = useCallback(() => {
     setIsUnstakeOpen(false);
-    refetch();
-  }, [refetch]);
+    handleSuccess();
+  }, [handleSuccess]);
 
   const handleCloseUnstake = useCallback(() => {
     setIsUnstakeOpen(false);
@@ -71,8 +82,8 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
 
   const handleOkStakeMoreDeposits = useCallback(() => {
     setIsStakeMoreDepositsOpen(false);
-    refetch();
-  }, [refetch]);
+    handleSuccess();
+  }, [handleSuccess]);
 
   const handleCloseStakeMoreDeposits = useCallback(() => {
     setIsStakeMoreDepositsOpen(false);
@@ -80,8 +91,8 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
 
   const handleOkUnstakeDeposits = useCallback(() => {
     setIsUnstakeDepositsOpen(false);
-    refetch();
-  }, [refetch]);
+    handleSuccess();
+  }, [handleSuccess]);
 
   const handleCloseUnstakeDeposits = useCallback(() => {
     setIsUnstakeDepositsOpen(false);
@@ -130,6 +141,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
       </Button>
     );
   }, [handleUnstakeDepositsOpen, isLocked]);
+
   const renderDays = useMemo(() => {
     return (
       <span>
@@ -137,6 +149,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
       </span>
     );
   }, []);
+
   const formattedStakedDeposits = useMemo(() => {
     if (stakedDeposits?.length) {
       const amount = stakedDeposits.reduce((acc, deposit) => {
@@ -146,6 +159,13 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
     }
     return '0';
   }, [stakedDeposits]);
+
+  useEffect(() => {
+    if (isOpen) {
+      refetchCollators();
+    }
+  }, [isOpen, refetch, refetchCollators]);
+
   return (
     <>
       <Modal
@@ -166,7 +186,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
           </ModalHeader>
           <Divider />
           <ModalBody className="relative flex w-full flex-col items-center justify-center gap-5 px-0 py-5">
-            {isLoading && (
+            {(isLoading || isCollatorSetLoading) && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50">
                 <Spinner />
               </div>
@@ -271,7 +291,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
         onClose={handleCloseStakeMore}
         onOk={handleOkStakeMore}
         collator={collator}
-        collatorList={collatorList}
+        collatorList={collators}
       />
       <Unstake
         isOpen={isUnstakeOpen}
@@ -280,13 +300,13 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
         totalAmount={formattedStakedRING}
         onOk={handleOkUnstake}
         collator={collator}
-        collatorList={collatorList}
+        collatorList={collators}
       />
       <StakeMoreDeposits
         isOpen={isStakeMoreDepositsOpen}
         onClose={handleCloseStakeMoreDeposits}
         onOk={handleOkStakeMoreDeposits}
-        collators={collatorList}
+        collators={collators}
         targetCollator={collator}
       />
       <UnstakeDeposits
@@ -295,7 +315,7 @@ const ManageStake = ({ isOpen, onClose, symbol, collator, collatorList }: Manage
         onOk={handleOkUnstakeDeposits}
         symbol={symbol}
         deposits={stakedDeposits}
-        collators={collatorList}
+        collators={collators}
         targetCollator={collator}
       />
     </>

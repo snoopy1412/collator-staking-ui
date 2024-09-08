@@ -23,7 +23,8 @@ const useBalance = () => {
 
   return {
     ...result,
-    formatted
+    formatted,
+    isLoading: result.isLoading || result.isRefetching
   };
 };
 

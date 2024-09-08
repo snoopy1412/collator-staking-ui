@@ -8,7 +8,6 @@ import { fromBytes } from 'viem';
 
 function usePreview() {
   const { address } = useWalletStatus();
-  console.log('twox64Concat(address as `0x${string}`)', twox64Concat(address as `0x${string}`));
 
   const results = useReadContracts({
     contracts: [
@@ -42,8 +41,6 @@ function usePreview() {
       enabled: !!address
     }
   });
-
-  console.log('results', results);
 
   const previewInfo = useMemo(() => {
     const [commissionOfResult, poolOfResult, sessionKeyResult, collatorsResult] =

@@ -21,6 +21,7 @@ export const useStakedDepositsOf = ({ account }: StakedDepositsOfProps) => {
   const {
     data: stakedDepositsOf,
     isLoading: isStakedDepositsOfLoading,
+    isRefetching: isStakedDepositsOfRefetching,
     refetch: refetchStakedDepositsOf
   } = useReadContract({
     address,
@@ -35,6 +36,7 @@ export const useStakedDepositsOf = ({ account }: StakedDepositsOfProps) => {
   const {
     data: combinedInfo,
     isLoading: isCombinedInfoLoading,
+    isRefetching: isCombinedInfoRefetching,
     refetch: refetchCombinedInfo
   } = useReadContracts({
     contracts:
@@ -93,7 +95,11 @@ export const useStakedDepositsOf = ({ account }: StakedDepositsOfProps) => {
 
   return {
     data: processedData as StakedDepositInfo[],
-    isLoading: isStakedDepositsOfLoading || isCombinedInfoLoading,
+    isLoading:
+      isStakedDepositsOfLoading ||
+      isCombinedInfoLoading ||
+      isStakedDepositsOfRefetching ||
+      isCombinedInfoRefetching,
     refetch
   };
 };

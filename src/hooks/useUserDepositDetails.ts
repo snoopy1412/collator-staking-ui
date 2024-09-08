@@ -33,20 +33,16 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     functionName: 'balanceOf',
     args: [account as `0x${string}`],
     query: {
-      enabled: enabled && !!account,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true
+      enabled: !!account && enabled,
+      refetchOnWindowFocus: false
     }
   });
-
-  console.log('balance', balance);
 
   const balanceNumber = balance ? Number(balance) : 0;
 
   const {
     data: tokenIdsResult,
     isLoading: isTokenIdsLoading,
-    refetch: refetchTokenIds,
     isRefetching: isTokenIdsRefetching
   } = useReadContracts({
     contracts: Array.from({ length: balanceNumber }, (_, index) => ({
@@ -56,11 +52,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       args: [account as `0x${string}`, BigInt(index)]
     })),
     query: {
-      enabled: enabled && !!account && balanceNumber > 0,
-      retry: true,
-      retryDelay: 1000,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true
+      enabled: balanceNumber > 0,
+      refetchOnWindowFocus: false
     }
   });
 
@@ -75,12 +68,9 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     [tokenIdsResult]
   );
 
-  console.log('validTokenIds', validTokenIds);
-
   const {
     data: combinedInfos,
     isLoading: isCombinedInfosLoading,
-    refetch: refetchCombinedInfos,
     isRefetching: isCombinedInfosRefetching
   } = useReadContracts({
     contracts: validTokenIds
@@ -100,11 +90,8 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       ])
       .flat(),
     query: {
-      enabled: enabled && validTokenIds.length > 0,
-      retry: true,
-      retryDelay: 1000,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true
+      enabled: validTokenIds.length > 0,
+      refetchOnWindowFocus: false
     }
   });
 
@@ -113,12 +100,30 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
       prevDepositList.filter((deposit) => deposit.tokenId !== tokenId)
     );
   }, []);
-
+  const isLoading = useMemo(() => {
+    return (
+      isBalanceLoading ||
+      isTokenIdsLoading ||
+      isCombinedInfosLoading ||
+      isBalanceRefetching ||
+      isTokenIdsRefetching ||
+      isCombinedInfosRefetching
+    );
+  }, [
+    isBalanceLoading,
+    isTokenIdsLoading,
+    isCombinedInfosLoading,
+    isBalanceRefetching,
+    isTokenIdsRefetching,
+    isCombinedInfosRefetching
+  ]);
   useEffect(() => {
+    if (isLoading) return;
+
     if (validTokenIds && combinedInfos) {
       const newDepositList = validTokenIds.map((tokenId, index) => {
-        const depositInfo = combinedInfos[index * 2]?.result || [];
-        const isClaimRequirePenalty = !!combinedInfos[index * 2 + 1]?.result || true;
+        const depositInfo = combinedInfos?.[index * 2]?.result || [];
+        const isClaimRequirePenalty = !!combinedInfos?.[index * 2 + 1]?.result || true;
 
         const months = depositInfo?.[0] ?? 0;
         const startAt = Number(depositInfo?.[1] ?? 0);
@@ -144,27 +149,16 @@ export function useUserDepositDetails({ enabled = true }: UseUserDepositDetailsP
     } else {
       setDepositList([]);
     }
-  }, [validTokenIds, combinedInfos, setDepositList]);
+  }, [validTokenIds, combinedInfos, setDepositList, isLoading]);
 
-  console.log('depositList', depositList);
-
-  const isLoading = useMemo(() => {
-    return isBalanceLoading || isTokenIdsLoading || isCombinedInfosLoading;
-  }, [isBalanceLoading, isTokenIdsLoading, isCombinedInfosLoading]);
-  const isRefetching = useMemo(() => {
-    return isBalanceRefetching || isTokenIdsRefetching || isCombinedInfosRefetching;
-  }, [isBalanceRefetching, isTokenIdsRefetching, isCombinedInfosRefetching]);
-  const refetch = useCallback(() => {
+  const refetch = useCallback(async () => {
     refetchBalance();
-    refetchTokenIds();
-    refetchCombinedInfos();
-  }, [refetchBalance, refetchTokenIds, refetchCombinedInfos]);
+  }, [refetchBalance]);
 
   return {
     depositList,
     deleteDepositInfoByTokenId,
     isLoading,
-    isRefetching,
     refetch
   };
 }

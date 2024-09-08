@@ -8,7 +8,8 @@ import {
   TableCell,
   Input,
   Spinner,
-  cn
+  cn,
+  Pagination
 } from '@nextui-org/react';
 import { SearchIcon } from 'lucide-react';
 
@@ -23,19 +24,24 @@ interface SelectCollatorTableProps {
   data: CollatorSet[];
   isLoading: boolean;
   keyword?: string;
+  page: number;
   selection: SelectionKeys;
   onSearchChange?: (keyword: string) => void;
   onSelectionChange?: (keys: SelectionKeys) => void;
+  onChangePage?: (page: number) => void;
 }
 
+const PAGE_SIZE = 10;
 const SelectCollatorTable = ({
   symbol,
   keyword,
+  page = 1,
   data,
   isLoading,
   selection,
   onSearchChange,
-  onSelectionChange
+  onSelectionChange,
+  onChangePage
 }: SelectCollatorTableProps) => {
   const [isPending, startTransition] = useTransition();
 
@@ -81,6 +87,9 @@ const SelectCollatorTable = ({
     }
   }, []);
 
+  const totalPages = Math.ceil(data.length / PAGE_SIZE);
+  const paginatedData = data.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-5">
       <Input
@@ -110,6 +119,19 @@ const SelectCollatorTable = ({
           base: cn(isLoading ? '' : 'min-w-[100%] overflow-auto max-h-[50vh]'),
           td: 'text-foreground'
         }}
+        bottomContent={
+          data.length ? (
+            <div className="flex w-full justify-end">
+              <Pagination
+                showControls
+                page={page}
+                total={totalPages}
+                size="sm"
+                onChange={onChangePage}
+              />
+            </div>
+          ) : null
+        }
         layout="fixed"
       >
         <TableHeader>
@@ -131,7 +153,7 @@ const SelectCollatorTable = ({
           </TableColumn>
         </TableHeader>
         <TableBody
-          items={data || []}
+          items={paginatedData || []}
           loadingContent={
             <div className="absolute inset-0 flex w-full items-center justify-center bg-background/50">
               <Spinner />

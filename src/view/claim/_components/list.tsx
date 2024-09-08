@@ -16,9 +16,10 @@ interface StakeListProps {
   data?: ClaimableReward[];
   onClick: (item: ClaimableReward) => void;
   isLoading: boolean;
+  rewardIsLoading: boolean;
 }
 
-const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
+const ClaimList = ({ data, isLoading, rewardIsLoading, onClick }: StakeListProps) => {
   const totalHeight = useMemo(() => {
     if (!data) return 0;
     if (data?.length < 4) {
@@ -35,6 +36,7 @@ const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
           <Item
             key={item?.id}
             reward={item}
+            rewardIsLoading={rewardIsLoading}
             onClick={() => onClick(item)}
             style={{
               ...style,
@@ -44,7 +46,7 @@ const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
         )
       );
     },
-    [data, onClick]
+    [data, onClick, rewardIsLoading]
   );
   if (isLoading) {
     return <ClaimLoading />;
@@ -65,7 +67,12 @@ const ClaimList = ({ data, isLoading, onClick }: StakeListProps) => {
         }}
       >
         {data.map((item) => (
-          <Item key={item.id} reward={item} onClick={() => onClick(item)} />
+          <Item
+            key={item.id}
+            reward={item}
+            rewardIsLoading={rewardIsLoading}
+            onClick={() => onClick(item)}
+          />
         ))}
       </ScrollShadow>
     );
