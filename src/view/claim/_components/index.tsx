@@ -4,7 +4,6 @@ import useStakingAccountWithStatus, {
   StakingAccountWithStatus
 } from '@/hooks/useStakingAccountWithStatus';
 import TransactionStatus from '@/components/transaction-status';
-import { useActiveAndWaitingCollators } from '@/hooks/useActiveAndWaitingCollators';
 import { abi as rewardAbi } from '@/config/abi/reward';
 import { ClaimableReward } from './item';
 import useClaim from '../_hooks/cliam';
@@ -12,18 +11,11 @@ import ClaimList from './list';
 
 const Claim = () => {
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
-  const {
-    activeCollators,
-    waitingCollators,
-    isLoading: isCollatorSetLoading
-  } = useActiveAndWaitingCollators();
 
   const { claim } = useClaim();
 
-  const { data: stakingAccount, isLoading: isStakingAccountLoading } = useStakingAccountWithStatus({
-    activeCollators,
-    waitingCollators
-  });
+  const { data: stakingAccount, isLoading: isStakingAccountLoading } =
+    useStakingAccountWithStatus();
 
   const {
     data: rewards,
@@ -73,7 +65,7 @@ const Claim = () => {
     <>
       <ClaimList
         data={stakingAccountWithRewards as ClaimableReward[]}
-        isLoading={isStakingAccountLoading || isCollatorSetLoading}
+        isLoading={isStakingAccountLoading}
         rewardIsLoading={isRewardsLoading || isRewardsRefetching}
         onClick={handleClick}
       />
