@@ -17,10 +17,10 @@ interface CollatorResult {
 }
 
 export function useCollatorsByStatus(): CollatorResult {
-  const { currentChainId } = useWalletStatus();
+  const { currentChainId, isEnabled } = useWalletStatus();
   const collatorSetQuery = useCollatorSetByInset({
-    where: { chainId: { _eq: currentChainId } },
-    orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]
+    currentChainId,
+    enabled: isEnabled
   });
 
   const activeCollatorCountQuery = useActiveCollatorCount({

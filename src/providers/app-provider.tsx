@@ -1,4 +1,3 @@
-'use client';
 import { Toaster } from 'sonner';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 

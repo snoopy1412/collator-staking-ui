@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, Tab, Tabs, Spinner } from '@nextui-org/react';
 import { X } from 'lucide-react';
 
@@ -18,13 +18,12 @@ interface CollatorTabsProps {
   isOpen?: boolean;
 }
 const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
-  const [selected, setSelected] = useState<Key>(collatorTabs[0].key);
-
   const {
     all: collators,
     isLoading: isCollatorSetLoading,
     refetch: refetchCollators
   } = useActiveAndWaitingCollators();
+
   const {
     hasSessionKey,
     sessionKey,
@@ -35,17 +34,30 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
     refetch: refetchPreview
   } = usePreview();
 
-  const refetch = useCallback(() => {
-    refetchPreview();
-    refetchCollators();
-  }, [refetchPreview, refetchCollators]);
-
   const tabs = useMemo(() => {
     if (isRegisteredCollator) {
       return collatorTabs?.filter((tab) => tab.key !== 'join');
     }
     return collatorTabs?.filter((tab) => tab.key !== 'overview');
   }, [isRegisteredCollator]);
+
+  const [selected, setSelected] = useState<Key>(tabs[0].key);
+
+  const refetch = useCallback(async () => {
+    await refetchPreview();
+    await refetchCollators();
+  }, [refetchPreview, refetchCollators]);
+
+  const handleStopSuccess = useCallback(async () => {
+    await refetch();
+    setSelected(tabs[0].key);
+  }, [refetch, tabs]);
+
+  useEffect(() => {
+    if (isOpen) {
+      refetch();
+    }
+  }, [isOpen, refetch]);
 
   return (
     <>
@@ -67,11 +79,6 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
           </ModalHeader>
 
           <ModalBody className="relative flex flex-col gap-[1.25rem] p-0 px-5 pb-5">
-            {(isLoading || isCollatorSetLoading) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                <Spinner />
-              </div>
-            )}
             {/* todo  */}
             {/* Animation is not working when tabs are used inside a modal. */}
             {/* https://github.com/nextui-org/nextui/issues/2297 */}
@@ -129,9 +136,15 @@ const CollatorTabs = ({ onClose, isOpen }: CollatorTabsProps) => {
                   commissionOf={commissionOf}
                   collators={collators}
                   refetch={refetch}
+                  onStopSuccess={handleStopSuccess}
                 />
               )}
             </TransitionPanel>
+            {(isLoading || isCollatorSetLoading) && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                <Spinner />
+              </div>
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>

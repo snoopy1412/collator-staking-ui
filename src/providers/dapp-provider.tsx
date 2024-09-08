@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { WagmiProvider } from 'wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';

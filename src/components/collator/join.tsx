@@ -5,10 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import TransactionStatus from '../transaction-status';
 import { useSetSessionKey } from './_hooks/set-session-key';
 import { CollatorSet } from '@/service/type';
-import { isHex } from 'viem';
 import { useCreateCollator, useCreateAndCollator } from './_hooks/collator';
-import { toast } from 'sonner';
 import useWalletStatus from '@/hooks/useWalletStatus';
+import { validSessionKey } from '@/utils';
 
 interface JoinCollatorProps {
   hasSessionKey: boolean;
@@ -18,10 +17,6 @@ interface JoinCollatorProps {
   refetch: () => void;
 }
 
-// key 必须是 byte 32 也就是说
-// 明白了，您需要一个固定长度为32字节（64个十六进制字符）的session key示例。这里是一个符合要求的示例：
-// 0xe41a5dbae69d47f5e483a3732d8d25314a8ff562f367df1cebc1f0c06b5c38e9
-
 const JoinCollator = ({
   hasSessionKey,
   sessionKey,
@@ -30,10 +25,10 @@ const JoinCollator = ({
   refetch
 }: JoinCollatorProps) => {
   const { address: account } = useWalletStatus();
-  console.log('account', account);
+
+  const [isValidSessionKey, setIsValidSessionKey] = useState(true);
   const [sessionKeyHash, setSessionKeyHash] = useState('');
   const [commissionHash, setCommissionHash] = useState('');
-
   const [sessionKeyValue, setSessionKeyValue] = useState('');
   const [commissionValue, setCommissionValue] = useState('');
 
@@ -49,14 +44,13 @@ const JoinCollator = ({
     const filteredCollators = collators.filter(
       (collator: CollatorSet) => collator.address && collator.address !== account
     );
-    console.log('filteredCollators', filteredCollators);
-
     return filteredCollators.length > 0
       ? (filteredCollators[filteredCollators.length - 1].address as `0x${string}`)
       : ('0x0000000000000000000000000000000000000000' as `0x${string}`);
   }, [collators, account]);
 
   const handleChangeSessionKeyValue = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsValidSessionKey(true);
     setSessionKeyValue(e.target.value);
   }, []);
 
@@ -64,14 +58,19 @@ const JoinCollator = ({
     setCommissionValue(e.target.value);
   }, []);
 
+  const handleCommissionBlur = useCallback(() => {
+    const commission = Number(commissionValue);
+    setCommissionValue(Math.min(Math.max(commission, 0), 100).toString());
+  }, [commissionValue]);
+
   const handleSetSessionKey = useCallback(async () => {
-    if (isHex(sessionKeyValue)) {
+    if (validSessionKey(sessionKeyValue)) {
       const tx = await setSessionKey(sessionKeyValue);
       if (tx) {
         setSessionKeyHash(tx);
       }
     } else {
-      toast.error('Invalid Session Key');
+      setIsValidSessionKey(false);
     }
   }, [sessionKeyValue, setSessionKey]);
 
@@ -117,6 +116,7 @@ const JoinCollator = ({
     return () => {
       setSessionKeyValue('');
       setCommissionValue('');
+      setIsValidSessionKey(true);
     };
   }, []);
   return (
@@ -152,6 +152,7 @@ const JoinCollator = ({
             )}
           </div>
         </div>
+        {isValidSessionKey ? null : <div className="text-xs text-red-500">Invalid Session Key</div>}
         {hasSessionKey ? null : (
           <Button
             color="primary"
@@ -183,19 +184,21 @@ const JoinCollator = ({
           </div>
           <div className="relative flex h-6 items-center justify-between">
             <input
-              type="text"
+              type="number"
               placeholder="0"
               className="w-full appearance-none bg-transparent pr-16 text-[1rem] font-bold placeholder:text-[0.875rem] placeholder:font-bold placeholder:text-[#c6c6c6] hover:bg-transparent focus-visible:outline-none"
               value={commissionValue}
               onChange={handleChangeCommissionValue}
+              onBlur={handleCommissionBlur}
             />
             <span>%</span>
           </div>
         </div>
+
         <Button
           color="primary"
           className="h-[2.125rem] w-full"
-          isDisabled={!hasSessionKey || !commissionValue || commissionValue === '0'}
+          isDisabled={!hasSessionKey || !commissionValue || !commissionValue}
           onClick={handleSetCommission}
           isLoading={isPendingCreateCollator || isPendingCreateAndCollator}
         >

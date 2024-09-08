@@ -33,7 +33,11 @@ export function useCollatorSet({ currentChainId, enabled = true }: CollatorSetPa
   });
 }
 
-export function useCollatorSetByInset(params: CollatorSetQueryParams = {}) {
+export function useCollatorSetByInset({ currentChainId, enabled = true }: CollatorSetParams) {
+  const params: CollatorSetQueryParams = {
+    where: { chainId: { _eq: currentChainId } },
+    orderBy: [{ seq: 'asc' }, { votes: 'desc' }, { blockNumber: 'desc' }, { logIndex: 'desc' }]
+  };
   return useQuery({
     queryKey: ['collatorSetByInset', params],
     queryFn: async () => {
@@ -42,7 +46,8 @@ export function useCollatorSetByInset(params: CollatorSetQueryParams = {}) {
         throw new Error('Failed to fetch collator set by inset');
       }
       return result;
-    }
+    },
+    enabled: !!currentChainId && !!enabled
   });
 }
 

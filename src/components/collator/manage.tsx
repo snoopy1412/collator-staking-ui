@@ -1,32 +1,38 @@
-'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Tooltip } from '@nextui-org/react';
 import { CircleHelp } from 'lucide-react';
+import useWalletStatus from '@/hooks/useWalletStatus';
 import TransactionStatus from '../transaction-status';
-
 import StopCollation from './stop-collation';
 import useStop from './_hooks/stop';
-import useWalletStatus from '@/hooks/useWalletStatus';
 import type { CollatorSet } from '@/service/type';
 import { useSetSessionKey } from './_hooks/set-session-key';
 import useUpdateCommission from './_hooks/update-commission';
 import { useCommissionLocks } from './_hooks/commissionLocks';
+import { validSessionKey } from '@/utils';
 
 interface ManageCollatorProps {
   sessionKey: string;
   commissionOf: bigint;
   collators: CollatorSet[];
   refetch: () => void;
+  onStopSuccess: () => void;
 }
-const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: ManageCollatorProps) => {
+const ManageCollator = ({
+  sessionKey,
+  commissionOf,
+  collators,
+  refetch,
+  onStopSuccess
+}: ManageCollatorProps) => {
   const { address } = useWalletStatus();
   const [open, setOpen] = useState(false);
+  const [isValidSessionKey, setIsValidSessionKey] = useState(true);
   const [sessionKeyHash, setSessionKeyHash] = useState('');
   const [commissionHash, setCommissionHash] = useState('');
   const [stopHash, setStopHash] = useState('');
   const [sessionKeyValue, setSessionKeyValue] = useState('');
   const [commissionValue, setCommissionValue] = useState('');
-  // commissionLocks
 
   const { isLockPeriod, isLoading: isLockPeriodLoading } = useCommissionLocks(
     address as `0x${string}`
@@ -37,8 +43,6 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
     collator: address as `0x${string}`,
     newCommission: BigInt(commissionValue)
   });
-
-  console.log('isLockPeriod', isLockPeriod);
 
   const { stop, isPending: isPendingStop } = useStop();
 
@@ -57,17 +61,27 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
   }, [sessionKey, sessionKeyValue]);
 
   const handleChangeSessionKeyValue = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsValidSessionKey(true);
     setSessionKeyValue(e.target.value);
   }, []);
+
+  const handleCommissionBlur = useCallback(() => {
+    const commission = Number(commissionValue);
+    setCommissionValue(Math.min(Math.max(commission, 0), 100).toString());
+  }, [commissionValue]);
 
   const handleChangeCommissionValue = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setCommissionValue(e.target.value);
   }, []);
 
   const handleSetSessionKey = useCallback(async () => {
-    const tx = await setSessionKey(sessionKeyValue);
-    if (tx) {
-      setSessionKeyHash(tx);
+    if (validSessionKey(sessionKeyValue)) {
+      const tx = await setSessionKey(sessionKeyValue);
+      if (tx) {
+        setSessionKeyHash(tx);
+      }
+    } else {
+      setIsValidSessionKey(false);
     }
   }, [sessionKeyValue, setSessionKey]);
 
@@ -105,8 +119,8 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
 
   const handleStopSuccess = useCallback(() => {
     setStopHash('');
-    refetch?.();
-  }, [refetch]);
+    onStopSuccess?.();
+  }, [onStopSuccess]);
 
   const handleStopError = useCallback(() => {
     setStopHash('');
@@ -116,6 +130,7 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
     return () => {
       setSessionKeyValue('');
       setCommissionValue('');
+      setIsValidSessionKey(true);
     };
   }, [commissionOf, sessionKey]);
 
@@ -128,12 +143,13 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
             <input
               type="text"
               placeholder="Enter Session Key"
-              className="bg-transparenttext-[1rem] w-full appearance-none font-bold placeholder:text-[0.875rem] placeholder:font-bold placeholder:text-[#c6c6c6] hover:bg-transparent focus-visible:outline-none"
+              className="w-full appearance-none bg-transparent text-[1rem] font-bold placeholder:text-[0.875rem] placeholder:font-bold placeholder:text-[#c6c6c6] hover:bg-transparent focus-visible:outline-none"
               value={sessionKeyValue}
               onChange={handleChangeSessionKeyValue}
             />
           </div>
         </div>
+        {isValidSessionKey ? null : <div className="text-xs text-red-500">Invalid Session Key</div>}
         {isSameSessionKey && (
           <div className="text-xs text-red-500">
             The session key cannot be the same as the one already set.
@@ -142,7 +158,7 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
         <Button
           color="primary"
           className="h-[2.125rem] w-full"
-          isDisabled={!sessionKeyValue}
+          isDisabled={!sessionKeyValue || isSameSessionKey}
           isLoading={isPendingSetSessionKey}
           onClick={handleSetSessionKey}
         >
@@ -168,11 +184,12 @@ const ManageCollator = ({ sessionKey, commissionOf, collators, refetch }: Manage
           </div>
           <div className="relative flex h-6 items-center justify-between">
             <input
-              type="text"
+              type="number"
               placeholder="0"
               className="w-full appearance-none bg-transparent text-[1rem] font-bold placeholder:text-[0.875rem] placeholder:font-bold placeholder:text-[#c6c6c6] hover:bg-transparent focus-visible:outline-none"
               value={commissionValue}
               onChange={handleChangeCommissionValue}
+              onBlur={handleCommissionBlur}
             />
             <span>%</span>
           </div>

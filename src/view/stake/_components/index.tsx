@@ -9,7 +9,7 @@ import MangeStake from './mange';
 import type { StakingAccountWithStatus } from '@/hooks/useStakingAccountWithStatus';
 
 const StakePage = () => {
-  const { currentChain } = useWalletStatus();
+  const { currentChain, isEnabled } = useWalletStatus();
   const [current, setCurrent] = useState<StakingAccountWithStatus | null>(null);
   const [isNewStakeOpen, setIsNewStakeOpen] = useState(false);
   const [isEditStakeOpen, setIsEditStakeOpen] = useState(false);
@@ -43,7 +43,12 @@ const StakePage = () => {
         />
 
         <div className="flex flex-col gap-[0.62rem]">
-          <Button className="w-full" color="primary" onClick={() => setIsNewStakeOpen(true)}>
+          <Button
+            className="w-full"
+            color="primary"
+            onClick={() => setIsNewStakeOpen(true)}
+            isDisabled={!isEnabled}
+          >
             New Stake
           </Button>
         </div>

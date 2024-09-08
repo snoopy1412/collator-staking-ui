@@ -40,10 +40,14 @@ function useStakingAccountWithStatus() {
       collators.map((c) => [c.address.toLowerCase().trim(), c.status])
     );
 
-    return data.map((account) => ({
-      ...account,
-      status: collatorStatusMap.get(account.collator.toLowerCase().trim())
-    }));
+    return data.map((account) => {
+      const collatorAddress = account.collator.toLowerCase().trim();
+      const status = collatorStatusMap.get(collatorAddress) ?? 'inactive';
+      return {
+        ...account,
+        status
+      };
+    });
   }, [data, collators]);
 
   return {

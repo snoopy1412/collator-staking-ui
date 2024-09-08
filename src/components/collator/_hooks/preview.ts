@@ -52,7 +52,7 @@ function usePreview() {
       sessionKeyResult?.result ??
       '0x0000000000000000000000000000000000000000000000000000000000000000';
     const collators = collatorsResult?.result ?? '0x0000000000000000000000000000000000000000';
-    const isLoading = results.isLoading ?? false;
+    const isLoading = results.isLoading || results?.isRefetching || false;
     const isError = results.isError ?? false;
 
     const hasPool = poolOf !== undefined && poolOf !== '0x0000000000000000000000000000000000000000';

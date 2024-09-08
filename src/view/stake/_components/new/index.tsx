@@ -229,7 +229,12 @@ const NewStakeModal = ({ onClose, isOpen, onSuccess }: NewStakeModalProps) => {
                 ) : (
                   <div className="flex items-center gap-[0.62rem]">
                     {isCollatorSetLoading ? (
-                      <Spinner size="sm" />
+                      <Spinner
+                        size="sm"
+                        classNames={{
+                          wrapper: cn('w-4 h-4')
+                        }}
+                      />
                     ) : (
                       <>
                         <div className="size-[1.625rem] rounded-full bg-[#c6c6c6]"></div>

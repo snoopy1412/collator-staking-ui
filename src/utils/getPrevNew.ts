@@ -16,6 +16,7 @@ export function determineOldAndNewPrev({
   let newPrev = DEFAULT_PREV as `0x${string}`;
 
   const target = collatorList.find((c) => c.address === collator);
+
   if (!target) {
     console.error('Target collator not found');
     return { oldPrev, newPrev };
